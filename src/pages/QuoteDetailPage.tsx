@@ -4,7 +4,9 @@ import { Icon } from '@/components/Icon';
 import { QuoteStatusBadge } from '@/features/dashboard/QuoteStatusBadge';
 import { Modal } from '@/features/people/Modal';
 import { useQuote } from '@/features/quotes/useQuote';
-import { formatBRL, formatDate, formatDateTime, initials } from '@/lib/format';import { updateQuoteStatus } from '@/services/quotesService';
+import { formatBRL, formatDate, formatDateTime, initials } from '@/lib/format';
+import { quoteTotals } from '@/lib/quoteTotals';
+import { updateQuoteStatus } from '@/services/quotesService';
 import type { QuoteStatus } from '@/types/dashboard';
 import type { QuoteContact } from '@/types/quotes';
 import formStyles from '@/features/people/Form.module.css';
@@ -133,6 +135,8 @@ export function QuoteDetailPage({ autoPrint = false }: { autoPrint?: boolean }) 
   }
 
   const itemCount = quote.items.reduce((sum, item) => sum + item.quantity, 0);
+  const totals = quoteTotals(quote.items, quote.discount);
+
   return (
     <>
       <Link to="/orcamentos" className={`link-strong ${styles.back}`} data-no-print>
@@ -234,6 +238,21 @@ export function QuoteDetailPage({ autoPrint = false }: { autoPrint?: boolean }) 
                 </li>
               ))}
             </ul>
+            {quote.discount && (
+              <dl className={styles.summary}>
+                <div>
+                  <dt>Subtotal</dt>
+                  <dd>{formatBRL(totals.subtotal)}</dd>
+                </div>
+                <div>
+                  <dt>
+                    Desconto
+                    {quote.discount.type === 'percent' && ` (${quote.discount.value.toLocaleString('pt-BR')}%)`}
+                  </dt>
+                  <dd>− {formatBRL(totals.discount)}</dd>
+                </div>
+              </dl>
+            )}
             <div className={styles.total}>
               <span>Total do orçamento</span>
               <strong>{formatBRL(quote.amount)}</strong>

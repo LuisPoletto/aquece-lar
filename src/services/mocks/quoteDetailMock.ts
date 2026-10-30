@@ -1,6 +1,7 @@
 import type { Quote, QuoteDetail, QuoteEvent, QuoteItem } from '@/types/quotes';
 import { toISODate } from '@/lib/format';
-import { DEFAULT_NOTES, PAYMENT_TERMS, VALID_DAYS } from '@/config/quotes';
+import { quoteTotals } from '@/lib/quoteTotals';
+import { DEFAULT_NOTES, PAYMENT_TERMS, VALID_DAYS, termDiscount } from '@/config/quotes';
 import { CATALOG_MOCK } from './catalogMock';
 import { CUSTOMERS_MOCK, SELLERS_MOCK } from './peopleMock';
 
@@ -8,8 +9,23 @@ function hoursAfter(iso: string, hours: number): string {
   return new Date(Date.parse(iso) + hours * 3_600_000).toISOString();
 }
 
-/** Itens determinísticos cuja soma fecha exatamente o valor do orçamento. */
-function buildItems(quote: Quote): QuoteItem[] {
+/**
+ * Subtotal que, com o percentual de desconto, fecha exatamente no valor do mock.
+ * Procura alguns centavos em volta da divisão por causa dos arredondamentos.
+ */
+function subtotalFor(amount: number, percent: number): number | null {
+  const guess = Math.round((amount / (1 - percent / 100)) * 100);
+  for (const delta of [0, 1, -1, 2, -2, 3, -3]) {
+    const subtotal = (guess + delta) / 100;
+    if (quoteTotals([{ quantity: 1, unitPrice: subtotal }], { type: 'percent', value: percent }).total === amount) {
+      return subtotal;
+    }
+  }
+  return null;
+}
+
+/** Itens determinísticos cuja soma fecha exatamente em `subtotal`. */
+function buildItems(quote: Quote, subtotal: number): QuoteItem[] {
   const seed = Number(quote.id) || 0;
   const count = 2 + (seed % 3);
   const picked = Array.from({ length: count }, (_, i) => CATALOG_MOCK[(seed * 7 + i * 4) % CATALOG_MOCK.length]!);
@@ -22,8 +38,8 @@ function buildItems(quote: Quote): QuoteItem[] {
     const last = i === picked.length - 1;
     const quantity = last ? 1 : 1 + ((seed + i) % 2);
     const lineTotal = last
-      ? Math.round((quote.amount - used) * 100) / 100
-      : Math.round(((weights[i]! / weightSum) * quote.amount) / quantity) * quantity;
+      ? Math.round((subtotal - used) * 100) / 100
+      : Math.round(((weights[i]! / weightSum) * subtotal) / quantity) * quantity;
     used += lineTotal;
     return { code, description, quantity, unitPrice: lineTotal / quantity };
   });
@@ -49,6 +65,11 @@ export function buildQuoteDetail(quote: Quote, history: QuoteEvent[]): QuoteDeta
   const seller = SELLERS_MOCK.find((s) => s.name === quote.seller);
   const seed = Number(quote.id) || 0;
   const validUntil = new Date(Date.parse(quote.createdAt) + VALID_DAYS * 86_400_000);
+  const paymentTerms = PAYMENT_TERMS[seed % PAYMENT_TERMS.length]!;
+  // Condição com desconto: os itens somam mais e o desconto traz de volta ao valor do mock.
+  const percent = termDiscount(paymentTerms);
+  const subtotal = percent ? subtotalFor(quote.amount, percent) : null;
+  const discount = percent && subtotal ? { type: 'percent' as const, value: percent } : null;
 
   return {
     ...quote,
@@ -63,9 +84,10 @@ export function buildQuoteDetail(quote: Quote, history: QuoteEvent[]): QuoteDeta
       detail: seller?.email ?? '',
       phone: seller?.phone ?? '',
     },
-    items: buildItems(quote),
+    items: buildItems(quote, subtotal ?? quote.amount),
     validUntil: toISODate(validUntil),
-    paymentTerms: PAYMENT_TERMS[seed % PAYMENT_TERMS.length]!,
+    paymentTerms,
+    discount,
     notes: DEFAULT_NOTES,
     history,
   };

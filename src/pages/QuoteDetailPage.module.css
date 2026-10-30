@@ -136,6 +136,32 @@
   display: none;
 }
 
+.summary {
+  margin: 0;
+  padding: 14px 24px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.summary div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.summary dt {
+  color: var(--text-2);
+}
+
+.summary dd {
+  margin: 0;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
 .total {
   padding: 16px 24px;
   border-top: 1px solid var(--line);
@@ -374,6 +400,7 @@
   }
 
   .cardHead,
+  .summary,
   .total {
     padding-left: 16px;
     padding-right: 16px;

@@ -1,6 +1,7 @@
 import type { Period, QuoteStatus } from '@/types/dashboard';
 import type { CatalogProduct, Quote, QuoteDetail, QuoteDraft, QuoteEvent } from '@/types/quotes';
 import { toISODate } from '@/lib/format';
+import { quoteTotals } from '@/lib/quoteTotals';
 import { validatePeriod } from './dashboardService';
 import { fromMock } from './mockLatency';
 import { CATALOG_MOCK } from './mocks/catalogMock';
@@ -53,8 +54,8 @@ export function listCatalog(signal?: AbortSignal): Promise<CatalogProduct[]> {
 /** Campos da listagem que derivam do formulário. */
 function summarize(draft: QuoteDraft): Pick<Quote, 'customer' | 'seller' | 'amount'> {
   if (draft.items.length === 0) throw new Error('O orçamento precisa de ao menos um item.');
-  const total = draft.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-  return { customer: draft.customerInfo.name, seller: draft.sellerInfo.name, amount: Math.round(total * 100) / 100 };
+  const { total } = quoteTotals(draft.items, draft.discount);
+  return { customer: draft.customerInfo.name, seller: draft.sellerInfo.name, amount: total };
 }
 
 /**

@@ -1,14 +1,16 @@
 import { useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Icon } from '@/components/Icon';
-import { DEFAULT_NOTES, PAYMENT_TERMS, VALID_DAYS } from '@/config/quotes';
+import { DEFAULT_NOTES, PAYMENT_TERMS, VALID_DAYS, termDiscount } from '@/config/quotes';
 import { useList } from '@/features/people/useList';
 import { Combobox, type ComboboxOption } from '@/features/quotes/Combobox';
 import { useQuote } from '@/features/quotes/useQuote';
-import { formatBRL, initials, toISODate } from '@/lib/format';import { listCustomers, listSellers } from '@/services/peopleService';
+import { formatBRL, initials, toISODate } from '@/lib/format';
+import { quoteTotals } from '@/lib/quoteTotals';
+import { listCustomers, listSellers } from '@/services/peopleService';
 import { createQuote, listCatalog, updateQuote } from '@/services/quotesService';
 import type { Customer, Seller } from '@/types/people';
-import type { CatalogProduct, QuoteContact, QuoteDetail } from '@/types/quotes';
+import type { CatalogProduct, QuoteContact, QuoteDetail, QuoteDiscount } from '@/types/quotes';
 import formStyles from '@/features/people/Form.module.css';
 import detailStyles from './QuoteDetailPage.module.css';
 import styles from './QuoteFormPage.module.css';
@@ -30,8 +32,11 @@ interface Errors {
   customer?: string;
   seller?: string;
   validUntil?: string;
+  discount?: string;
   lines?: Record<number, LineErrors>;
 }
+
+type DiscountType = QuoteDiscount['type'];
 
 const FORM_ID = 'orcamento-form';
 
@@ -188,7 +193,15 @@ function QuoteForm({ mode, base, customers, sellers, catalog }: QuoteFormProps) 
   const [validUntil, setValidUntil] = useState(() =>
     mode === 'edit' && base ? base.validUntil : defaultValidUntil(),
   );
-  const [paymentTerms, setPaymentTerms] = useState(base?.paymentTerms ?? PAYMENT_TERMS[0] ?? '');  const [notes, setNotes] = useState(base?.notes ?? DEFAULT_NOTES);
+  const [paymentTerms, setPaymentTerms] = useState(base?.paymentTerms ?? PAYMENT_TERMS[0] ?? '');
+  // Orçamento novo já começa com o desconto que a condição padrão promete.
+  const [discountType, setDiscountType] = useState<DiscountType>(base?.discount?.type ?? 'percent');
+  const [discountValue, setDiscountValue] = useState(() => {
+    if (base) return base.discount ? String(base.discount.value) : '';
+    const percent = termDiscount(paymentTerms);
+    return percent === null ? '' : String(percent);
+  });
+  const [notes, setNotes] = useState(base?.notes ?? DEFAULT_NOTES);
   const [errors, setErrors] = useState<Errors>({});
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState('');
@@ -211,7 +224,15 @@ function QuoteForm({ mode, base, customers, sellers, catalog }: QuoteFormProps) 
   };
   const sellerContact: QuoteContact | null = seller && { name: seller.name, detail: seller.email, phone: seller.phone };
 
-  const total = lines.reduce((sum, line) => sum + lineTotal(line), 0);
+  const discountNumber = Number(discountValue);
+  const discount: QuoteDiscount | null =
+    discountValue.trim() === '' || !Number.isFinite(discountNumber) || discountNumber <= 0
+      ? null
+      : { type: discountType, value: discountNumber };
+  const totals = quoteTotals(
+    lines.map((line) => ({ quantity: 1, unitPrice: lineTotal(line) })),
+    discount,
+  );
   const units = lines.reduce((sum, line) => sum + (Number(line.quantity) || 0), 0);
   const today = toISODate(new Date());
 
@@ -220,6 +241,37 @@ function QuoteForm({ mode, base, customers, sellers, catalog }: QuoteFormProps) 
     // Sugere o vendedor responsável pelo cliente se nenhum foi escolhido.
     const owner = sellers.find((s) => s.name === customers.find((c) => c.id === id)?.seller);
     if (!sellerId && owner) setSellerId(owner.id);
+  }
+
+  /** Troca entre % e R$ mantendo o mesmo valor descontado. */
+  function switchDiscountType(type: DiscountType) {
+    if (type === discountType) return;
+    setDiscountType(type);
+    if (!discount) return;
+    const converted =
+      type === 'amount'
+        ? totals.discount
+        : totals.subtotal > 0
+          ? Math.round((totals.discount / totals.subtotal) * 10_000) / 100
+          : 0;
+    setDiscountValue(String(converted));
+  }
+
+  /**
+   * Condição que promete desconto preenche o percentual; ao trocar para outra,
+   * o desconto sugerido sai. Um desconto digitado à mão não é tocado.
+   */
+  function choosePayment(terms: string) {
+    const previous = termDiscount(paymentTerms);
+    const next = termDiscount(terms);
+    const suggested = previous !== null && discountType === 'percent' && discountNumber === previous;
+    setPaymentTerms(terms);
+    if (next !== null && (discountValue.trim() === '' || suggested)) {
+      setDiscountType('percent');
+      setDiscountValue(String(next));
+    } else if (next === null && suggested) {
+      setDiscountValue('');
+    }
   }
 
   function updateLine(key: number, patch: Partial<Line>) {
@@ -245,7 +297,15 @@ function QuoteForm({ mode, base, customers, sellers, catalog }: QuoteFormProps) 
     if (!customer) found.customer = 'Escolha o cliente.';
     if (!seller) found.seller = 'Escolha o vendedor.';
     if (!validUntil) found.validUntil = 'Informe a validade.';
-    else if (validUntil < today) found.validUntil = 'A validade não pode ser anterior a hoje.';    const lineErrors: Record<number, LineErrors> = {};
+    else if (validUntil < today) found.validUntil = 'A validade não pode ser anterior a hoje.';
+    if (discountValue.trim() !== '') {
+      if (!Number.isFinite(discountNumber) || discountNumber < 0) found.discount = 'Desconto inválido.';
+      else if (discountType === 'percent' && discountNumber > 100) found.discount = 'O desconto vai até 100%.';
+      else if (discountType === 'amount' && discountNumber > totals.subtotal) {
+        found.discount = 'O desconto não pode passar do subtotal.';
+      }
+    }
+    const lineErrors: Record<number, LineErrors> = {};
     for (const line of lines) {
       const lineError = validateLine(line);
       if (Object.keys(lineError).length > 0) lineErrors[line.key] = lineError;
@@ -268,6 +328,7 @@ function QuoteForm({ mode, base, customers, sellers, catalog }: QuoteFormProps) 
       })),
       validUntil,
       paymentTerms,
+      discount,
       notes: notes.trim(),
     };
 
@@ -407,9 +468,55 @@ function QuoteForm({ mode, base, customers, sellers, catalog }: QuoteFormProps) 
                 Adicionar item
               </button>
             </div>
+            <div className={styles.summary}>
+              <div className={styles.summaryRow}>
+                <span>Subtotal</span>
+                <span className={styles.num}>{formatBRL(totals.subtotal)}</span>
+              </div>
+              <div className={styles.summaryRow}>
+                <label htmlFor="desconto">Desconto</label>
+                <div className={styles.discount}>
+                  <div role="group" aria-label="Tipo de desconto" className={styles.toggle}>
+                    <button
+                      type="button"
+                      aria-pressed={discountType === 'percent'}
+                      className={styles.toggleBtn}
+                      onClick={() => switchDiscountType('percent')}
+                    >
+                      %
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={discountType === 'amount'}
+                      className={styles.toggleBtn}
+                      onClick={() => switchDiscountType('amount')}
+                    >
+                      R$
+                    </button>
+                  </div>
+                  <input
+                    id="desconto"
+                    type="number"
+                    min={0}
+                    max={discountType === 'percent' ? 100 : undefined}
+                    step={discountType === 'percent' ? 0.5 : 0.01}
+                    inputMode="decimal"
+                    placeholder="0"
+                    className={`${formStyles.input} ${styles.numInput} ${styles.discountInput}`}
+                    value={discountValue}
+                    onChange={(e) => setDiscountValue(e.target.value)}
+                    aria-invalid={Boolean(errors.discount)}
+                  />
+                  <span className={`${styles.num} ${styles.discountOff}`}>
+                    {totals.discount > 0 ? `− ${formatBRL(totals.discount)}` : formatBRL(0)}
+                  </span>
+                </div>
+              </div>
+              {errors.discount && <p className={`${formStyles.error} ${styles.summaryError}`}>{errors.discount}</p>}
+            </div>
             <div className={detailStyles.total}>
               <span>Total do orçamento</span>
-              <strong>{formatBRL(total)}</strong>
+              <strong>{formatBRL(totals.total)}</strong>
             </div>
           </section>
 
@@ -432,7 +539,7 @@ function QuoteForm({ mode, base, customers, sellers, catalog }: QuoteFormProps) 
               </label>
               <label className={formStyles.field}>
                 <span className={formStyles.label}>Pagamento</span>
-                <select className={formStyles.input} value={paymentTerms} onChange={(e) => setPaymentTerms(e.target.value)}>
+                <select className={formStyles.input} value={paymentTerms} onChange={(e) => choosePayment(e.target.value)}>
                   {paymentOptions.map((terms) => (
                     <option key={terms} value={terms}>
                       {terms}

@@ -32,14 +32,22 @@ export interface QuoteDetail extends Quote {
   /** Data ISO (AAAA-MM-DD) até quando o orçamento vale. */
   validUntil: string;
   paymentTerms: string;
+  /** Desconto sobre a soma dos itens; `null` = sem desconto. */
+  discount: QuoteDiscount | null;
   notes: string;
   history: QuoteEvent[];
+}
+
+export interface QuoteDiscount {
+  type: 'percent' | 'amount';
+  /** Percentual (0–100) ou valor em reais, conforme `type`. */
+  value: number;
 }
 
 /** O que o formulário envia; número, data, status, total e histórico vêm do serviço. */
 export type QuoteDraft = Pick<
   QuoteDetail,
-  'customerInfo' | 'sellerInfo' | 'items' | 'validUntil' | 'paymentTerms' | 'notes'
+  'customerInfo' | 'sellerInfo' | 'items' | 'validUntil' | 'paymentTerms' | 'discount' | 'notes'
 >;
 
 export interface CatalogProduct {
