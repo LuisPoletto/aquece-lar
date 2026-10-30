@@ -12,7 +12,7 @@ const SELLERS: Array<[id: string, name: string, quotes: number, weight: number]>
   ['v6', 'Tatiane Rocha', 19, 0.98],
 ];
 
-const RECENT_QUOTES: RecentQuote[] = [
+export const RECENT_QUOTES: RecentQuote[] = [
   { id: '1181', number: '#1181', customer: 'Restaurante Brasa Viva', seller: 'Carlos Menezes', amount: 18940, status: 'Pendente', createdAt: '2026-10-30T09:42:00-03:00' },
   { id: '1180', number: '#1180', customer: 'Marcos Andrade', seller: 'Patrícia Lima', amount: 7380, status: 'Enviado', createdAt: '2026-10-29T18:15:00-03:00' },
   { id: '1179', number: '#1179', customer: 'Condomínio Vale Verde', seller: 'Rafael Bortolini', amount: 32410, status: 'Aprovado', createdAt: '2026-10-29T16:03:00-03:00' },

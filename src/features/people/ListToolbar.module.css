@@ -41,6 +41,9 @@
 
 .segmented {
   display: inline-flex;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
   padding: 3px;
   gap: 2px;
   border: 1px solid var(--line);
@@ -59,6 +62,8 @@
   font-weight: 500;
   color: var(--text-2);
   cursor: pointer;
+  white-space: nowrap;
+  flex: none;
 }
 
 .segment:hover {

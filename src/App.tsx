@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { CustomersPage } from '@/pages/CustomersPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
+import { QuotesPage } from '@/pages/QuotesPage';
 import { QuoteDetailPage } from '@/pages/QuoteDetailPage';
 import { SellersPage } from '@/pages/SellersPage';
 
@@ -17,7 +18,7 @@ export function App() {
             <Route path="orcamentos/novo" element={<PlaceholderPage />} />
             <Route path="orcamentos/:id/pdf" element={<QuoteDetailPage />} />
             <Route path="orcamentos/:id" element={<QuoteDetailPage />} />
-            <Route path="orcamentos" element={<PlaceholderPage />} />
+            <Route path="orcamentos" element={<QuotesPage />} />
             <Route path="vendedores" element={<SellersPage />} />
             <Route path="clientes" element={<CustomersPage />} />
             <Route path="produtos" element={<PlaceholderPage />} />

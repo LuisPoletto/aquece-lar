@@ -1,7 +1,6 @@
 import type { Customer, Seller } from '@/types/people';
+import { fromMock } from './mockLatency';
 import { CUSTOMERS_MOCK, SELLERS_MOCK } from './mocks/peopleMock';
-
-const MOCK_LATENCY_MS = 250;
 
 /**
  * Cópias em memória dos mocks: cadastros, edições e exclusões valem
@@ -10,26 +9,6 @@ const MOCK_LATENCY_MS = 250;
  */
 let sellers = [...SELLERS_MOCK];
 let customers = [...CUSTOMERS_MOCK];
-
-/** Resolve o valor após a latência simulada, respeitando o cancelamento. */
-function fromMock<T>(produce: () => T, signal?: AbortSignal): Promise<T> {
-  return new Promise((resolve, reject) => {
-    if (signal?.aborted) {
-      reject(signal.reason);
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      signal?.removeEventListener('abort', onAbort);
-      resolve(produce());
-    }, MOCK_LATENCY_MS);
-
-    function onAbort() {
-      window.clearTimeout(timer);
-      reject(signal?.reason);
-    }
-    signal?.addEventListener('abort', onAbort, { once: true });
-  });
-}
 
 function upsert<T extends { id: string }>(list: T[], item: T): T[] {
   return list.some((x) => x.id === item.id) ? list.map((x) => (x.id === item.id ? item : x)) : [item, ...list];

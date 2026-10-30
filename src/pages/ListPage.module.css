@@ -113,6 +113,7 @@
   text-align: right;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .muted {
@@ -127,6 +128,45 @@
 
 .actionsCell {
   text-align: right;
+}
+
+.rowActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.headActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pager {
+  padding: 14px 24px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pagerInfo {
+  font-size: 13px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.pagerButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.pagerButtons .btn:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .date {
@@ -273,10 +313,27 @@
   .empty {
     padding: 8px 16px 24px;
   }
+
+  .itemCard p {
+    margin: 0;
+  }
+
+  .pager {
+    padding: 12px 16px;
+  }
 }
 
 @media (max-width: 640px) {
   .h1 {
     font-size: 22px;
+  }
+
+  .headActions {
+    width: 100%;
+  }
+
+  .headActions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
   }
 }
