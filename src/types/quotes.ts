@@ -35,3 +35,16 @@ export interface QuoteDetail extends Quote {
   notes: string;
   history: QuoteEvent[];
 }
+
+/** O que o formulário envia; número, data, status, total e histórico vêm do serviço. */
+export type QuoteDraft = Pick<
+  QuoteDetail,
+  'customerInfo' | 'sellerInfo' | 'items' | 'validUntil' | 'paymentTerms' | 'notes'
+>;
+
+export interface CatalogProduct {
+  code: string;
+  description: string;
+  /** Preço de tabela; pode ser ajustado em cada orçamento. */
+  unitPrice: number;
+}

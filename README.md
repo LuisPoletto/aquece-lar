@@ -46,6 +46,10 @@ prototipo/        mockup HTML original (referência visual)
 - Dashboard com período filtrável, KPIs, gráfico diário (quantidade/valor), ranking e últimos orçamentos
 - Sidebar recolhível no desktop e gaveta no mobile
 - Tema claro/escuro persistido em `localStorage`
-- Rotas do menu existem; telas além do dashboard são placeholders até a próxima etapa
+- Orçamentos: lista com período, busca, filtro de status e paginação; detalhe com troca de status e PDF pela impressão do navegador; criação de orçamento com cliente, vendedor, itens do catálogo e condições
+- Vendedores e clientes: listagem com busca e filtros, cadastro, edição e exclusão
+- Produtos, linhas, fotos, fluxogramas, conversas, equivalências e configurações ainda são placeholders
 
-O backend ainda não faz parte deste projeto. Para ligar uma API, substitua `src/services/dashboardService.ts` e os mocks em `src/services/mocks/`.
+Cadastros, edições, mudanças de status e orçamentos novos ficam em memória e se perdem ao recarregar a página.
+
+O backend ainda não faz parte deste projeto. Para ligar uma API, substitua as funções em `src/services/` (mantendo as assinaturas) e remova os mocks em `src/services/mocks/`.

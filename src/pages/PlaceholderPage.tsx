@@ -2,14 +2,10 @@ import { useLocation } from 'react-router-dom';
 import { ALL_NAV_ITEMS } from '@/config/navigation';
 import styles from './PlaceholderPage.module.css';
 
-const TITLES: Record<string, string> = {
-  '/orcamentos/novo': 'Novo orçamento',
-};
-
 export function PlaceholderPage() {
   const { pathname } = useLocation();
   const nav = ALL_NAV_ITEMS.find((item) => item.to === pathname);
-  const title = TITLES[pathname] ?? nav?.label ?? 'Página';
+  const title = nav?.label ?? 'Página';
 
   return (
     <section className={`card ${styles.card}`}>
