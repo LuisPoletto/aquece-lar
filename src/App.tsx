@@ -1,9 +1,11 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { CustomersPage } from '@/pages/CustomersPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
 import { QuoteDetailPage } from '@/pages/QuoteDetailPage';
+import { SellersPage } from '@/pages/SellersPage';
 
 export function App() {
   return (
@@ -16,8 +18,8 @@ export function App() {
             <Route path="orcamentos/:id/pdf" element={<QuoteDetailPage />} />
             <Route path="orcamentos/:id" element={<QuoteDetailPage />} />
             <Route path="orcamentos" element={<PlaceholderPage />} />
-            <Route path="vendedores" element={<PlaceholderPage />} />
-            <Route path="clientes" element={<PlaceholderPage />} />
+            <Route path="vendedores" element={<SellersPage />} />
+            <Route path="clientes" element={<CustomersPage />} />
             <Route path="produtos" element={<PlaceholderPage />} />
             <Route path="linhas" element={<PlaceholderPage />} />
             <Route path="fotos" element={<PlaceholderPage />} />

@@ -1,0 +1,282 @@
+.pageHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.titles {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.sub {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-3);
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--err-bg);
+  color: var(--err);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.card {
+  overflow: hidden;
+}
+
+.empty {
+  margin: 0;
+  padding: 8px 24px 32px;
+  font-size: 14px;
+  color: var(--text-3);
+}
+
+.skeleton {
+  min-height: 420px;
+  background: linear-gradient(90deg, var(--surface) 0%, var(--subtle) 50%, var(--surface) 100%);
+  background-size: 200% 100%;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.scroll {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th {
+  padding: 10px 12px;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text-3);
+  text-align: left;
+  background: var(--subtle);
+}
+
+.table th:first-child,
+.table td:first-child {
+  padding-left: 24px;
+}
+
+.table th:last-child,
+.table td:last-child {
+  padding-right: 24px;
+}
+
+.table td {
+  padding: 0 12px;
+}
+
+.row {
+  border-top: 1px solid var(--line);
+  height: 60px;
+}
+
+.row:hover {
+  background: var(--subtle);
+}
+
+.num {
+  text-align: right;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.muted {
+  color: var(--text-2);
+}
+
+.actionsHead {
+  width: 52px;
+  /* Prende o rótulo .sr-only (absoluto) dentro da área de rolagem da tabela. */
+  position: relative;
+}
+
+.actionsCell {
+  text-align: right;
+}
+
+.date {
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.personText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.name {
+  font-weight: 600;
+}
+
+.table .name,
+.table .detail {
+  white-space: nowrap;
+}
+
+.detail {
+  font-size: 12px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.ok {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+
+.off {
+  background: var(--subtle);
+  color: var(--text-3);
+}
+
+.info {
+  background: var(--info-bg);
+  color: var(--info);
+}
+
+.brand {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.cards {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .scroll {
+    display: none;
+  }
+
+  .cards {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    margin: 0;
+    padding: 0 12px 12px;
+    gap: 10px;
+  }
+
+  .itemCard {
+    padding: 14px 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--subtle);
+  }
+
+  .cardTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .cardMeta {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  .cardFoot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  .cardStrong {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .empty {
+    padding: 8px 16px 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .h1 {
+    font-size: 22px;
+  }
+}
