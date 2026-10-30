@@ -3,8 +3,8 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { CustomersPage } from '@/pages/CustomersPage';
 import { DashboardPage } from '@/pages/DashboardPage';
-import { NewQuotePage } from '@/pages/NewQuotePage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
+import { QuoteFormPage } from '@/pages/QuoteFormPage';
 import { QuotesPage } from '@/pages/QuotesPage';
 import { QuoteDetailPage } from '@/pages/QuoteDetailPage';
 import { SellersPage } from '@/pages/SellersPage';
@@ -16,7 +16,9 @@ export function App() {
         <Routes>
           <Route element={<AppLayout />}>
             <Route index element={<DashboardPage />} />
-            <Route path="orcamentos/novo" element={<NewQuotePage />} />
+            <Route path="orcamentos/novo" element={<QuoteFormPage mode="new" />} />
+            <Route path="orcamentos/:id/editar" element={<QuoteFormPage mode="edit" />} />
+            <Route path="orcamentos/:id/duplicar" element={<QuoteFormPage mode="duplicate" />} />
             <Route path="orcamentos/:id/pdf" element={<QuoteDetailPage autoPrint />} />
             <Route path="orcamentos/:id" element={<QuoteDetailPage />} />
             <Route path="orcamentos" element={<QuotesPage />} />

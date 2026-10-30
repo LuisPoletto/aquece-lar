@@ -50,26 +50,47 @@ export function listCatalog(signal?: AbortSignal): Promise<CatalogProduct[]> {
   return fromMock(() => CATALOG_MOCK, signal);
 }
 
-/** Cria o orçamento como pendente, com o próximo número da sequência. */
-export function createQuote(draft: QuoteDraft): Promise<Quote> {
+/** Campos da listagem que derivam do formulário. */
+function summarize(draft: QuoteDraft): Pick<Quote, 'customer' | 'seller' | 'amount'> {
+  if (draft.items.length === 0) throw new Error('O orçamento precisa de ao menos um item.');
+  const total = draft.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  return { customer: draft.customerInfo.name, seller: draft.sellerInfo.name, amount: Math.round(total * 100) / 100 };
+}
+
+/**
+ * Cria o orçamento como pendente, com o próximo número da sequência.
+ * `note` é o primeiro evento do histórico (ex.: de qual orçamento foi copiado).
+ */
+export function createQuote(draft: QuoteDraft, note = 'Orçamento criado'): Promise<Quote> {
   return fromMock(() => {
-    if (draft.items.length === 0) throw new Error('O orçamento precisa de ao menos um item.');
     const next = Math.max(0, ...quotes.map((q) => Number(q.id) || 0)) + 1;
-    const total = draft.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
     const createdAt = new Date().toISOString();
     const quote: Quote = {
       id: String(next),
       number: `#${next}`,
-      customer: draft.customerInfo.name,
-      seller: draft.sellerInfo.name,
-      amount: Math.round(total * 100) / 100,
+      ...summarize(draft),
       status: 'Pendente',
       createdAt,
     };
     quotes = [quote, ...quotes];
     drafts.set(quote.id, draft);
-    history.set(quote.id, [{ status: 'Pendente', at: createdAt, note: 'Orçamento criado' }]);
+    history.set(quote.id, [{ status: 'Pendente', at: createdAt, note }]);
     return quote;
+  });
+}
+
+/** Só orçamentos pendentes podem ser editados; enviados ou fechados viram cópia. */
+export function updateQuote(id: string, draft: QuoteDraft): Promise<Quote> {
+  return fromMock(() => {
+    const current = quotes.find((q) => q.id === id);
+    if (!current) throw new QuoteNotFoundError(id);
+    if (current.status !== 'Pendente') throw new Error(`O orçamento ${current.number} não está mais pendente.`);
+    const updated: Quote = { ...current, ...summarize(draft) };
+    quotes = quotes.map((q) => (q.id === id ? updated : q));
+    drafts.set(id, draft);
+    const events = history.get(id) ?? [];
+    history.set(id, [...events, { status: 'Pendente', at: new Date().toISOString(), note: 'Orçamento editado' }]);
+    return updated;
   });
 }
 

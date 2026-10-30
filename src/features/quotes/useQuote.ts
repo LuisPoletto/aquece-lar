@@ -3,15 +3,23 @@ import { getQuote, QuoteNotFoundError } from '@/services/quotesService';
 import type { QuoteDetail } from '@/types/quotes';
 
 type QuoteState =
+  | { status: 'idle'; data: null }
   | { status: 'loading'; data: QuoteDetail | null }
   | { status: 'success'; data: QuoteDetail }
   | { status: 'not-found'; data: null }
   | { status: 'error'; data: QuoteDetail | null; message: string };
 
-export function useQuote(id: string, reloadKey = 0): QuoteState {
-  const [state, setState] = useState<QuoteState>({ status: 'loading', data: null });
+/** `id` nulo não busca nada (estado `idle`), para telas em que o orçamento é opcional. */
+export function useQuote(id: string | null, reloadKey = 0): QuoteState {
+  const [state, setState] = useState<QuoteState>(
+    id === null ? { status: 'idle', data: null } : { status: 'loading', data: null },
+  );
 
   useEffect(() => {
+    if (id === null) {
+      setState({ status: 'idle', data: null });
+      return;
+    }
     const controller = new AbortController();
     setState((prev) => ({ status: 'loading', data: prev.data?.id === id ? prev.data : null }));
 

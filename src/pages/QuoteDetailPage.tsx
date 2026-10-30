@@ -4,8 +4,7 @@ import { Icon } from '@/components/Icon';
 import { QuoteStatusBadge } from '@/features/dashboard/QuoteStatusBadge';
 import { Modal } from '@/features/people/Modal';
 import { useQuote } from '@/features/quotes/useQuote';
-import { formatBRL, formatDate, formatDateTime, initials } from '@/lib/format';
-import { updateQuoteStatus } from '@/services/quotesService';
+import { formatBRL, formatDate, formatDateTime, initials } from '@/lib/format';import { updateQuoteStatus } from '@/services/quotesService';
 import type { QuoteStatus } from '@/types/dashboard';
 import type { QuoteContact } from '@/types/quotes';
 import formStyles from '@/features/people/Form.module.css';
@@ -134,7 +133,6 @@ export function QuoteDetailPage({ autoPrint = false }: { autoPrint?: boolean }) 
   }
 
   const itemCount = quote.items.reduce((sum, item) => sum + item.quantity, 0);
-
   return (
     <>
       <Link to="/orcamentos" className={`link-strong ${styles.back}`} data-no-print>
@@ -153,6 +151,16 @@ export function QuoteDetailPage({ autoPrint = false }: { autoPrint?: boolean }) 
           </p>
         </div>
         <div className={styles.actions} data-no-print>
+          {quote.status === 'Pendente' && (
+            <Link to={`/orcamentos/${quote.id}/editar`} className="btn btn-secondary">
+              <Icon name="edit" size={16} />
+              Editar
+            </Link>
+          )}
+          <Link to={`/orcamentos/${quote.id}/duplicar`} className="btn btn-secondary">
+            <Icon name="copy" size={16} />
+            Duplicar
+          </Link>
           <button type="button" className="btn btn-secondary" onClick={() => window.print()}>
             <Icon name="download" size={16} />
             Baixar PDF
