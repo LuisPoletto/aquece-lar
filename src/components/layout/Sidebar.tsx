@@ -22,8 +22,9 @@ export function Sidebar({ collapsed, mobileOpen, onToggleCollapsed, onCloseMobil
         className={`${styles.backdrop} ${mobileOpen ? styles.backdropVisible : ''}`}
         onClick={onCloseMobile}
         aria-hidden="true"
+        data-no-print
       />
-      <aside id="menu-principal" aria-label="Menu principal" className={className}>
+      <aside id="menu-principal" aria-label="Menu principal" className={className} data-no-print>
         <div className={styles.header}>
           <NavLink to="/" className={styles.brand} onClick={onCloseMobile}>
             <img src={logo} alt="" className={styles.logo} />

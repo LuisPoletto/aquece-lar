@@ -109,7 +109,8 @@
   background: var(--subtle);
 }
 
-.num {
+.num,
+.table .num {
   text-align: right;
   font-weight: 500;
   font-variant-numeric: tabular-nums;

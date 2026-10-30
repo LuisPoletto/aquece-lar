@@ -24,7 +24,7 @@ export function Topbar({ mobileMenuOpen, onOpenMobileMenu }: TopbarProps) {
   }, []);
 
   return (
-    <header className={styles.topbar}>
+    <header className={styles.topbar} data-no-print>
       <button
         type="button"
         className={`icon-btn ${styles.menuButton}`}

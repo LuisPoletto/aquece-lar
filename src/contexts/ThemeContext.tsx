@@ -33,6 +33,23 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   }, [theme]);
 
+  // A impressão (e o "Salvar como PDF") sai sempre no tema claro.
+  useEffect(() => {
+    const root = document.documentElement;
+    const toLight = () => {
+      root.dataset.tema = 'claro';
+    };
+    const restore = () => {
+      root.dataset.tema = theme;
+    };
+    window.addEventListener('beforeprint', toLight);
+    window.addEventListener('afterprint', restore);
+    return () => {
+      window.removeEventListener('beforeprint', toLight);
+      window.removeEventListener('afterprint', restore);
+    };
+  }, [theme]);
+
   const toggleTheme = useCallback(() => {
     setTheme((current) => (current === 'claro' ? 'escuro' : 'claro'));
   }, []);

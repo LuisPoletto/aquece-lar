@@ -187,6 +187,23 @@ button {
   border-radius: 9px;
 }
 
+@media print {
+  [data-no-print] {
+    display: none !important;
+  }
+
+  html,
+  body {
+    background: #fff;
+  }
+
+  .card {
+    box-shadow: none;
+    border: 1px solid var(--line);
+    break-inside: avoid;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

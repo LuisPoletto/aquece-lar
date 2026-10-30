@@ -16,7 +16,7 @@ export function App() {
           <Route element={<AppLayout />}>
             <Route index element={<DashboardPage />} />
             <Route path="orcamentos/novo" element={<PlaceholderPage />} />
-            <Route path="orcamentos/:id/pdf" element={<QuoteDetailPage />} />
+            <Route path="orcamentos/:id/pdf" element={<QuoteDetailPage autoPrint />} />
             <Route path="orcamentos/:id" element={<QuoteDetailPage />} />
             <Route path="orcamentos" element={<QuotesPage />} />
             <Route path="vendedores" element={<SellersPage />} />
