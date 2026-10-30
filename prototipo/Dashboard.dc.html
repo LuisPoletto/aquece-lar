@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Kafer — Dashboard</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Fraunces:opsz,wght@9..144,500;9..144,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.kf{--bg:#F5F6F2;--surface:#FFFFFF;--subtle:#F0F2EC;--line:#E2E6DD;--line-strong:#CBD2C5;--text:#141A13;--text-2:#485245;--text-3:#636D60;--brand:#3A5333;--brand-soft:#E7EEE4;--accent:#EA7C2D;--accent-hover:#D3681B;--accent-soft:#FDEEE2;--accent-ink:#A54D10;--on-accent:#1F1206;--side:#3A5333;--side-hover:#2F4529;--side-text:#E9EFE6;--side-text-2:#B7C4B2;--ok:#0A7262;--ok-bg:#DDF3EE;--warn:#8A5A00;--warn-bg:#FFF1CC;--err:#B3261E;--err-bg:#FCE8E6;--info:#1D5FA8;--info-bg:#E4EEFA;--shadow-md:0 1px 2px rgba(20,26,19,.04),0 4px 16px rgba(20,26,19,.07);--shadow-lg:0 4px 8px rgba(20,26,19,.05),0 20px 48px rgba(20,26,19,.14)}
+.kf[data-tema="escuro"]{--bg:#0E140D;--surface:#151D14;--subtle:#1B251A;--line:#253224;--line-strong:#33432F;--text:#EDF1EA;--text-2:#B5C0B0;--text-3:#8D998A;--brand:#7FA374;--brand-soft:#1E2C1C;--accent-soft:#2E1F12;--accent-ink:#F4A469;--side:#18261A;--side-hover:#223621;--ok:#4FD1B8;--ok-bg:#10302A;--warn:#F2C14E;--warn-bg:#33290F;--err:#F2867D;--err-bg:#3A1715;--info:#7DB3F0;--info-bg:#132840;--shadow-md:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);--shadow-lg:0 20px 48px rgba(0,0,0,.5)}
+.kf *{box-sizing:border-box}
+.kf a{color:var(--accent-ink)}.kf a:hover{color:var(--accent-ink)}
+.kf .nav-i:hover{background:var(--side-hover)}
+.kf .row:hover{background:var(--subtle)}
+.kf .ibtn:hover{background:var(--subtle);color:var(--text)}
+.kf .btn-p:hover{background:var(--accent-hover)}
+.kf :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</helmet>
+<div class="kf" data-tema="{{tema}}" style="display: flex; flex-wrap: wrap; min-height: 100vh; background: var(--bg); color: var(--text); font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif; -webkit-font-smoothing: antialiased">
+
+  <aside aria-label="Menu principal" style="flex: 1 1 248px; background: var(--side); color: var(--side-text); display: flex; flex-direction: column; gap: 24px; padding: 20px 14px">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 6px">
+      <a href="Dashboard.dc.html" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: #FFFFFF">
+        <img src="./assets/724e5af472b5c0503324e42df51c40de.jpg" alt="Kafer" style="width: 40px; height: 40px; border-radius: 999px; display: block">
+        <span style="display: flex; flex-direction: column; line-height: 1.15"><span style="font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 500">Kafer</span><span style="font-size: 12px; color: var(--side-text-2)">Orçamentos</span></span>
+      </a>
+      <button type="button" aria-label="Recolher menu" class="nav-i" style="width: 36px; height: 36px; border: 0; border-radius: 9px; background: transparent; color: var(--side-text-2); display: inline-flex; align-items: center; justify-content: center"><dc-import name="Icon" i="panel" s="18" hint-size="18px,18px"></dc-import></button>
+    </div>
+    <nav style="display: flex; flex-direction: column; gap: 20px; flex: 1">
+      <sc-for list="{{nav}}" as="sec" hint-placeholder-count="4">
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <p style="margin: 0 0 6px 0; padding: 0 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--side-text-2)">{{sec.t}}</p>
+          <sc-for list="{{sec.items}}" as="it" hint-placeholder-count="3">
+            <a href="{{it.h}}" class="nav-i" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; text-decoration: none; font-size: 14px; font-weight: {{it.fw}}; background: {{it.bg}}; color: {{it.fg}}"><dc-import name="Icon" i="{{it.ic}}" s="18" hint-size="18px,18px"></dc-import>{{it.l}}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.06)">
+      <span style="width: 36px; height: 36px; border-radius: 999px; background: #EA7C2D; color: #1F1206; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex: none">AD</span>
+      <span style="display: flex; flex-direction: column; flex: 1; min-width: 0"><span style="font-size: 13px; font-weight: 600; color: #FFFFFF">Administrador</span><span style="font-size: 12px; color: var(--side-text-2)">Acesso total</span></span>
+      <a href="#" aria-label="Sair" class="nav-i" style="width: 36px; height: 36px; border-radius: 9px; color: var(--side-text-2); display: inline-flex; align-items: center; justify-content: center"><dc-import name="Icon" i="logout" s="18" hint-size="18px,18px"></dc-import></a>
+    </div>
+  </aside>
+
+  <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="min-height: 68px; display: flex; align-items: center; gap: 12px; padding: 12px 32px; border-bottom: 1px solid var(--line); background: var(--surface); flex-wrap: wrap">
+      <label style="flex: 1 1 260px; max-width: 520px; height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border-radius: 10px; background: var(--subtle); color: var(--text-3)">
+        <dc-import name="Icon" i="search" s="18" hint-size="18px,18px"></dc-import>
+        <input type="search" aria-label="Busca global" placeholder="Buscar orçamentos, clientes, produtos…" style="border: 0; background: transparent; flex: 1; min-width: 0; font: inherit; font-size: 14px; color: var(--text)">
+        <kbd style="font-family: inherit; font-size: 11px; padding: 2px 6px; border-radius: 6px; border: 1px solid var(--line-strong); color: var(--text-3)">Ctrl K</kbd>
+      </label>
+      <div style="flex: 1"></div>
+      <button type="button" class="ibtn" aria-label="Alternar tema" style="width: 40px; height: 40px; border: 0; border-radius: 10px; background: transparent; color: var(--text-2); display: inline-flex; align-items: center; justify-content: center"><dc-import name="Icon" i="moon" s="18" hint-size="18px,18px"></dc-import></button>
+      <button type="button" class="ibtn" aria-label="Notificações, 3 novas" style="position: relative; width: 40px; height: 40px; border: 0; border-radius: 10px; background: transparent; color: var(--text-2); display: inline-flex; align-items: center; justify-content: center"><dc-import name="Icon" i="bell" s="18" hint-size="18px,18px"></dc-import><span style="position: absolute; top: 9px; right: 10px; width: 8px; height: 8px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 0 2px var(--surface)"></span></button>
+      <button type="button" class="ibtn" style="height: 40px; border: 0; border-radius: 10px; background: transparent; color: var(--text); display: inline-flex; align-items: center; gap: 10px; padding: 0 8px 0 4px; font: inherit; font-size: 14px; font-weight: 500"><span style="width: 32px; height: 32px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700">AD</span>Administrador<dc-import name="Icon" i="chevDown" s="16" hint-size="16px,16px"></dc-import></button>
+    </header>
+
+    <main style="width: 100%; max-width: 1280px; margin: 0 auto; padding: 32px; display: flex; flex-direction: column; gap: 24px">
+      <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <h1 style="margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.02em">Bom dia, Administrador</h1>
+          <p style="margin: 0; font-size: 14px; color: var(--text-3)">Resumo de 01/10/2026 a 30/10/2026</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+          <div style="display: flex; align-items: center; gap: 4px; height: 40px; padding: 0 6px 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text-3)">
+            <dc-import name="Icon" i="calendar" s="16" hint-size="16px,16px"></dc-import>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; padding-left: 6px">De <input type="date" value="2026-10-01" style="border: 0; background: transparent; font: inherit; font-size: 13px; color: var(--text); width: 118px"></label>
+            <span style="color: var(--line-strong)">|</span>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 13px">Até <input type="date" value="2026-10-30" style="border: 0; background: transparent; font: inherit; font-size: 13px; color: var(--text); width: 118px"></label>
+          </div>
+          <a href="#" style="height: 40px; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); color: var(--text); font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; text-decoration: none"><dc-import name="Icon" i="chat" s="16" hint-size="16px,16px"></dc-import>Ver conversas</a>
+          <a href="OrcamentoForm.dc.html" class="btn-p" style="height: 40px; padding: 0 16px; border-radius: 10px; background: var(--accent); color: var(--on-accent); font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; text-decoration: none"><dc-import name="Icon" i="plus" s="16" hint-size="16px,16px"></dc-import>Novo orçamento</a>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 16px">
+        <sc-for list="{{kpis}}" as="k" hint-placeholder-count="4">
+          <div style="background: var(--surface); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 14px; box-shadow: var(--shadow-md)">
+            <div style="display: flex; align-items: center; justify-content: space-between">
+              <span style="font-size: 13px; font-weight: 500; color: var(--text-2)">{{k.label}}</span>
+              <span style="width: 34px; height: 34px; border-radius: 10px; background: var(--brand-soft); color: var(--brand); display: inline-flex; align-items: center; justify-content: center"><dc-import name="Icon" i="{{k.ic}}" s="18" hint-size="18px,18px"></dc-import></span>
+            </div>
+            <span style="font-family: Fraunces, Georgia, serif; font-size: 34px; font-weight: 500; letter-spacing: -0.01em; line-height: 1">{{k.value}}</span>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 12px">
+              <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: var(--ok-bg); color: var(--ok); font-weight: 600"><dc-import name="Icon" i="trend" s="12" hint-size="12px,12px"></dc-import>{{k.delta}}</span>
+              <span style="color: var(--text-3)">{{k.note}}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 16px">
+        <section style="flex: 2 1 560px; min-width: 0; background: var(--surface); border-radius: 14px; padding: 22px 24px; box-shadow: var(--shadow-md); display: flex; flex-direction: column; gap: 18px">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap">
+            <div style="display: flex; flex-direction: column; gap: 4px">
+              <h2 style="margin: 0; font-size: 17px; font-weight: 600">{{chartTitle}}</h2>
+              <p style="margin: 0; font-size: 13px; color: var(--text-3)">{{chartSub}}</p>
+            </div>
+            <div role="group" aria-label="Métrica do gráfico" style="display: inline-flex; padding: 4px; background: var(--subtle); border-radius: 10px; gap: 4px">
+              <button type="button" aria-pressed="{{isQtd}}" onClick="{{setQtd}}" style="height: 32px; padding: 0 12px; border: 0; border-radius: 7px; font: inherit; font-size: 13px; font-weight: 600; background: {{qtdBg}}; color: {{qtdFg}}; box-shadow: {{qtdSh}}">Quantidade</button>
+              <button type="button" aria-pressed="{{isValor}}" onClick="{{setValor}}" style="height: 32px; padding: 0 12px; border: 0; border-radius: 7px; font: inherit; font-size: 13px; font-weight: 600; background: {{valBg}}; color: {{valFg}}; box-shadow: {{valSh}}">Valor</button>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px">
+            <div style="position: relative; width: 44px; height: 220px; flex: none">
+              <sc-for list="{{yTicks}}" as="y" hint-placeholder-count="4">
+                <span style="position: absolute; right: 0; bottom: {{y.b}}; transform: translateY(50%); font-size: 11px; color: var(--text-3); font-variant-numeric: tabular-nums">{{y.l}}</span>
+              </sc-for>
+            </div>
+            <div style="position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+              <div style="position: relative; height: 220px">
+                <sc-for list="{{yTicks}}" as="y" hint-placeholder-count="4">
+                  <div style="position: absolute; left: 0; right: 0; bottom: {{y.b}}; height: 1px; background: var(--line)"></div>
+                </sc-for>
+                <div style="position: absolute; inset: 0; display: flex; align-items: flex-end; gap: 6px">
+                  <sc-for list="{{bars}}" as="b" hint-placeholder-count="30">
+                    <div style="position: relative; flex: 1; height: 100%; display: flex; align-items: flex-end">
+                      <div style="width: 100%; height: {{b.h}}; background: var(--accent); border-radius: 4px 4px 0 0; opacity: {{b.op}}"></div>
+                      <sc-if value="{{b.tip}}" hint-placeholder-val="{{false}}">
+                        <div style="position: absolute; bottom: {{b.tb}}; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--surface); border-radius: 8px; padding: 8px 10px; white-space: nowrap; display: flex; flex-direction: column; gap: 2px; box-shadow: var(--shadow-lg)">
+                          <span style="font-size: 11px; opacity: 0.8">{{b.date}}</span>
+                          <span style="font-size: 13px; font-weight: 600">{{b.tipText}}</span>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="display: flex; gap: 6px">
+                <sc-for list="{{bars}}" as="b" hint-placeholder-count="30">
+                  <span style="flex: 1; text-align: center; font-size: 11px; color: var(--text-3); white-space: nowrap">{{b.lbl}}</span>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section style="flex: 1 1 320px; min-width: 0; background: var(--surface); border-radius: 14px; padding: 22px 24px; box-shadow: var(--shadow-md); display: flex; flex-direction: column; gap: 18px">
+          <div style="display: flex; align-items: center; justify-content: space-between">
+            <div style="display: flex; flex-direction: column; gap: 4px">
+              <h2 style="margin: 0; font-size: 17px; font-weight: 600">Ranking de vendedores</h2>
+              <p style="margin: 0; font-size: 13px; color: var(--text-3)">Por valor orçado no período</p>
+            </div>
+            <a href="#" style="font-size: 13px; font-weight: 600; text-decoration: none">Ver todos</a>
+          </div>
+          <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px">
+            <sc-for list="{{rank}}" as="r" hint-placeholder-count="6">
+              <li style="display: flex; flex-direction: column; gap: 8px">
+                <div style="display: flex; align-items: center; gap: 10px">
+                  <span style="width: 20px; font-size: 12px; font-weight: 600; color: var(--text-3); font-variant-numeric: tabular-nums">{{r.pos}}</span>
+                  <span style="width: 30px; height: 30px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex: none">{{r.ini}}</span>
+                  <span style="display: flex; flex-direction: column; flex: 1; min-width: 0">
+                    <span style="font-size: 14px; font-weight: 600">{{r.nome}}</span>
+                    <span style="font-size: 12px; color: var(--text-3)">{{r.qtd}} orçamentos</span>
+                  </span>
+                  <span style="font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums">{{r.valor}}</span>
+                </div>
+                <div style="height: 6px; border-radius: 999px; background: var(--subtle); margin-left: 30px">
+                  <div style="height: 6px; border-radius: 999px; background: var(--brand); width: {{r.w}}"></div>
+                </div>
+              </li>
+            </sc-for>
+          </ol>
+        </section>
+      </div>
+
+      <section style="background: var(--surface); border-radius: 14px; box-shadow: var(--shadow-md); overflow: hidden">
+        <div style="padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap">
+          <h2 style="margin: 0; font-size: 17px; font-weight: 600">Últimos 10 orçamentos</h2>
+          <a href="OrcamentosLista.dc.html" style="font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px">Ver todos os orçamentos<dc-import name="Icon" i="chevRight" s="14" hint-size="14px,14px"></dc-import></a>
+        </div>
+        <div style="overflow-x: auto">
+          <table style="width: 100%; min-width: 820px; border-collapse: collapse; font-size: 14px">
+            <thead>
+              <tr style="background: var(--subtle); color: var(--text-3); font-size: 12px; text-align: left">
+                <th scope="col" style="padding: 10px 24px; font-weight: 600">Nº</th>
+                <th scope="col" style="padding: 10px 12px; font-weight: 600">Cliente</th>
+                <th scope="col" style="padding: 10px 12px; font-weight: 600">Vendedor</th>
+                <th scope="col" style="padding: 10px 12px; font-weight: 600; text-align: right">Valor</th>
+                <th scope="col" style="padding: 10px 12px; font-weight: 600">Status</th>
+                <th scope="col" style="padding: 10px 12px; font-weight: 600">Data</th>
+                <th scope="col" style="padding: 10px 24px; font-weight: 600; text-align: right">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{ultimos}}" as="o" hint-placeholder-count="10">
+                <tr class="row" style="border-top: 1px solid var(--line); height: 54px">
+                  <td style="padding: 0 24px; font-weight: 600; font-variant-numeric: tabular-nums">{{o.n}}</td>
+                  <td style="padding: 0 12px">{{o.cliente}}</td>
+                  <td style="padding: 0 12px; color: var(--text-2)">{{o.vend}}</td>
+                  <td style="padding: 0 12px; text-align: right; font-weight: 500; font-variant-numeric: tabular-nums">{{o.valor}}</td>
+                  <td style="padding: 0 12px"><span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: {{o.sbg}}; color: {{o.sfg}}; font-size: 12px; font-weight: 600"><span style="width: 6px; height: 6px; border-radius: 999px; background: {{o.sfg}}"></span>{{o.status}}</span></td>
+                  <td style="padding: 0 12px; color: var(--text-3); font-variant-numeric: tabular-nums">{{o.data}}</td>
+                  <td style="padding: 0 24px">
+                    <div style="display: flex; justify-content: flex-end; gap: 4px">
+                      <a href="OrcamentoForm.dc.html" class="ibtn" aria-label="Abrir orçamento {{o.n}}" style="width: 36px; height: 36px; border-radius: 9px; color: var(--text-2); display: inline-flex; align-items: center; justify-content: center"><dc-import name="Icon" i="eye" s="17" hint-size="17px,17px"></dc-import></a>
+                      <a href="PdfOrcamento.dc.html" class="ibtn" aria-label="Baixar PDF {{o.n}}" style="width: 36px; height: 36px; border-radius: 9px; color: var(--text-2); display: inline-flex; align-items: center; justify-content: center"><dc-import name="Icon" i="download" s="17" hint-size="17px,17px"></dc-import></a>
+                    </div>
+                  </td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","default":"claro","options":["claro","escuro"]},"$preview":{"width":1440,"height":1320}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { modo: 'qtd' }; }
+  renderVals() {
+    const ativo = 'dashboard';
+    const S = [
+      ['Comercial', [['dashboard','Dashboard','grid','Dashboard.dc.html'],['orcamentos','Orçamentos','file','OrcamentosLista.dc.html'],['vendedores','Vendedores','user','#'],['clientes','Clientes','users','#']]],
+      ['Catálogo', [['produtos','Produtos','box','Produtos.dc.html'],['linhas','Linhas e códigos','layers','#'],['fotos','Fotos','image','#']]],
+      ['Atendimento / Bot', [['fluxogramas','Fluxogramas','flow','FluxogramaLista.dc.html'],['conversas','Conversas','chat','#'],['equivalencias','Equivalências','swap','#']]],
+      ['Sistema', [['config','Configurações','sliders','#']]]
+    ];
+    const nav = S.map(([t, its]) => ({ t, items: its.map(([k, l, ic, h]) => ({ l, ic, h, bg: k === ativo ? '#EA7C2D' : '', fg: k === ativo ? '#1F1206' : 'var(--side-text)', fw: k === ativo ? 600 : 500 })) }));
+
+    const brl0 = (n) => 'R$ ' + Math.round(n).toLocaleString('pt-BR');
+    const brl = (n) => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const qtd = [6,7,2,0,8,6,7,9,5,2,1,7,8,10,6,7,3,0,9,8,11,7,6,2,1,8,10,9,12,4];
+    const val = qtd.map((q, i) => q * (7200 + ((i * 37) % 30) * 110));
+    const totalQ = qtd.reduce((a, b) => a + b, 0);
+    const totalV = val.reduce((a, b) => a + b, 0);
+
+    const modo = this.state.modo;
+    const data = modo === 'qtd' ? qtd : val.map((v) => v / 1000);
+    const max = modo === 'qtd' ? 12 : Math.ceil(Math.max(...data) / 30) * 30;
+    const H = 220;
+    const bars = data.map((v, i) => {
+      const d = i + 1;
+      const h = Math.max(v > 0 ? 3 : 0, Math.round((v / max) * H));
+      return {
+        h: h + 'px', op: d === 30 ? 0.45 : 1,
+        lbl: [1, 5, 10, 15, 20, 25, 30].includes(d) ? String(d).padStart(2, '0') + '/10' : '',
+        tip: d === 29, tb: (h + 10) + 'px', date: 'Qui, 29/10',
+        tipText: modo === 'qtd' ? v + ' orçamentos' : brl0(val[i])
+      };
+    });
+    const yTicks = [0, 1, 2, 3].map((k) => ({ b: Math.round((k / 3) * H) + 'px', l: modo === 'qtd' ? String((max / 3) * k) : (k === 0 ? '0' : ((max / 3) * k) + ' mil') }));
+    const on = { bg: 'var(--surface)', fg: 'var(--text)', sh: '0 1px 2px rgba(20,26,19,.12)' };
+    const off = { bg: 'transparent', fg: 'var(--text-2)', sh: 'none' };
+    const a = modo === 'qtd' ? on : off, b = modo === 'qtd' ? off : on;
+
+    const kpis = [
+      { label: 'Total de orçamentos', ic: 'file', value: String(totalQ), delta: '+18%', note: 'vs. setembro' },
+      { label: 'Valor total', ic: 'dollar', value: brl0(totalV), delta: '+11%', note: 'vs. setembro' },
+      { label: 'Clientes', ic: 'users', value: '96', delta: '+14', note: 'novos no período' },
+      { label: 'Vendedores ativos', ic: 'user', value: '6', delta: '6 de 8', note: 'cadastrados' }
+    ];
+
+    const R = [['Carlos Menezes', 42, 1.1], ['Patrícia Lima', 38, 0.95], ['Rafael Bortolini', 31, 1.05], ['Aline Costa', 27, 0.9], ['Diego Ferraz', 24, 1.0], ['Tatiane Rocha', 19, 0.98]];
+    const wsum = R.reduce((s, r) => s + r[1] * r[2], 0);
+    const vals = R.map((r) => (r[1] * r[2] / wsum) * totalV);
+    const vmax = Math.max(...vals);
+    const rank = R.map((r, i) => ({ pos: i + 1, nome: r[0], ini: r[0].split(' ').map((p) => p[0]).join(''), qtd: r[1], valor: brl0(vals[i]), w: Math.round((vals[i] / vmax) * 100) + '%' }));
+
+    const ST = { Pendente: ['var(--warn-bg)', 'var(--warn)'], Enviado: ['var(--info-bg)', 'var(--info)'], Aprovado: ['var(--ok-bg)', 'var(--ok)'], Cancelado: ['var(--err-bg)', 'var(--err)'] };
+    const U = [
+      ['#1181', 'Restaurante Brasa Viva', 'Carlos Menezes', 18940, 'Pendente', '30/10/2026 09:42'],
+      ['#1180', 'Marcos Andrade', 'Patrícia Lima', 7380, 'Enviado', '29/10/2026 18:15'],
+      ['#1179', 'Condomínio Vale Verde', 'Rafael Bortolini', 32410, 'Aprovado', '29/10/2026 16:03'],
+      ['#1178', 'Juliana Teixeira', 'Aline Costa', 5920, 'Enviado', '29/10/2026 11:27'],
+      ['#1177', 'Pousada Recanto da Serra', 'Carlos Menezes', 24750, 'Pendente', '29/10/2026 10:08'],
+      ['#1176', 'Ricardo Moretto', 'Diego Ferraz', 9860, 'Aprovado', '28/10/2026 17:51'],
+      ['#1175', 'Espaço Gourmet Bento', 'Patrícia Lima', 15230, 'Cancelado', '28/10/2026 14:36'],
+      ['#1174', 'Ana Paula Ribeiro', 'Tatiane Rocha', 6480, 'Enviado', '28/10/2026 09:12'],
+      ['#1173', 'Clube Recreativo Serrano', 'Rafael Bortolini', 41200, 'Pendente', '27/10/2026 19:40'],
+      ['#1172', 'Felipe Zanella', 'Aline Costa', 8150, 'Aprovado', '27/10/2026 15:22']
+    ];
+    const ultimos = U.map(([n, cliente, vend, v, status, data]) => ({ n, cliente, vend, valor: brl(v), status, data, sbg: ST[status][0], sfg: ST[status][1] }));
+
+    return {
+      tema: this.props.tema ?? 'claro', nav, kpis, bars, yTicks, rank, ultimos,
+      chartTitle: modo === 'qtd' ? 'Orçamentos por dia' : 'Valor orçado por dia',
+      chartSub: modo === 'qtd' ? totalQ + ' orçamentos em outubro' : brl0(totalV) + ' em outubro',
+      isQtd: modo === 'qtd' ? 'true' : 'false', isValor: modo === 'qtd' ? 'false' : 'true',
+      qtdBg: a.bg, qtdFg: a.fg, qtdSh: a.sh, valBg: b.bg, valFg: b.fg, valSh: b.sh,
+      setQtd: () => this.setState({ modo: 'qtd' }),
+      setValor: () => this.setState({ modo: 'valor' })
+    };
+  }
+}
+</script>
+</body>
+</html>

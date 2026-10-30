@@ -1,0 +1,163 @@
+.card {
+  overflow: hidden;
+}
+
+.head {
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.empty {
+  margin: 0;
+  padding: 0 24px 24px;
+  font-size: 14px;
+  color: var(--text-3);
+}
+
+.scroll {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 820px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th {
+  padding: 10px 12px;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text-3);
+  text-align: left;
+  background: var(--subtle);
+}
+
+.table th:first-child,
+.table td:first-child {
+  padding-left: 24px;
+}
+
+.table th:last-child,
+.table td:last-child {
+  padding-right: 24px;
+}
+
+.num {
+  text-align: right;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.actionsHead {
+  text-align: right;
+}
+
+.row {
+  border-top: 1px solid var(--line);
+  height: 54px;
+}
+
+.row:hover {
+  background: var(--subtle);
+}
+
+.table td {
+  padding: 0 12px;
+}
+
+.number {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.muted {
+  color: var(--text-2);
+}
+
+.date {
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.cards {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .scroll {
+    display: none;
+  }
+
+  .cards {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    margin: 0;
+    padding: 0 12px 12px;
+    gap: 10px;
+  }
+
+  .quoteCard {
+    padding: 14px 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: var(--subtle);
+  }
+
+  .cardTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .cardCustomer {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .cardMeta {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  .cardFoot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .cardAmount {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .head {
+    padding: 16px;
+  }
+}

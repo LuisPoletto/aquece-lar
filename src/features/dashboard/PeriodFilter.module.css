@@ -1,0 +1,52 @@
+.filter {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 40px;
+  padding: 0 6px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--text-3);
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  padding-left: 6px;
+}
+
+.input {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  width: 122px;
+}
+
+.sep {
+  color: var(--line-strong);
+}
+
+@media (max-width: 640px) {
+  .filter {
+    width: 100%;
+    justify-content: space-between;
+    padding: 0 8px;
+  }
+
+  .input {
+    width: auto;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .field {
+    flex: 1;
+    min-width: 0;
+    padding-left: 0;
+  }
+}
