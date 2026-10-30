@@ -77,7 +77,8 @@
   box-shadow: 0 0 0 2px var(--surface);
 }
 
-.userButton {
+/* `.topbar` na frente para vencer a largura fixa de `.icon-btn` (global). */
+.topbar .userButton {
   width: auto;
   gap: 10px;
   padding: 0 8px 0 4px;
@@ -121,7 +122,7 @@
     display: none;
   }
 
-  .userButton {
+  .topbar .userButton {
     padding: 0 4px;
     gap: 4px;
   }
