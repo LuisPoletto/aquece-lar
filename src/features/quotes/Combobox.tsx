@@ -19,10 +19,12 @@ interface ComboboxProps {
   onChange: (id: string) => void;
   placeholder: string;
   invalid?: boolean;
+  /** Quando presente, o texto digitado sem correspondência exata vira a opção "Cadastrar …". */
+  onCreate?: (text: string) => void;
 }
 
 /** Campo que aceita digitar para filtrar e também abre a lista completa. */
-export function Combobox({ id, options, value, onChange, placeholder, invalid }: ComboboxProps) {
+export function Combobox({ id, options, value, onChange, placeholder, invalid, onCreate }: ComboboxProps) {
   const selected = options.find((o) => o.id === value);
   const [text, setText] = useState(selected?.name ?? '');
   const [open, setOpen] = useState(false);
@@ -38,6 +40,11 @@ export function Combobox({ id, options, value, onChange, placeholder, invalid }:
 
   // Com o nome escolhido no campo, a lista mostra todas as opções.
   const filtered = text === (selected?.name ?? '') ? options : options.filter((o) => matches(text, o.name, o.hint ?? ''));
+  const typed = text.trim();
+  const canCreate =
+    Boolean(onCreate) && typed !== '' && !options.some((o) => normalize(o.name) === normalize(typed));
+  // A opção de cadastro fica depois das encontradas, com o índice seguinte.
+  const total = filtered.length + (canCreate ? 1 : 0);
 
   useEffect(() => {
     listRef.current?.querySelector(`[data-index="${active}"]`)?.scrollIntoView({ block: 'nearest' });
@@ -55,12 +62,17 @@ export function Combobox({ id, options, value, onChange, placeholder, invalid }:
     setOpen(false);
   }
 
+  function create() {
+    setOpen(false);
+    onCreate?.(typed);
+  }
+
   // Ao sair do campo: nome exato escolhe, vazio limpa, qualquer outro texto volta ao escolhido.
   function commit() {
     setOpen(false);
-    const exact = options.find((o) => normalize(o.name) === normalize(text.trim()));
+    const exact = options.find((o) => normalize(o.name) === normalize(typed));
     if (exact) choose(exact);
-    else if (text.trim() === '') onChange('');
+    else if (typed === '') onChange('');
     else setText(selected?.name ?? '');
   }
 
@@ -69,11 +81,12 @@ export function Combobox({ id, options, value, onChange, placeholder, invalid }:
       event.preventDefault();
       if (!open) return show();
       const step = event.key === 'ArrowDown' ? 1 : -1;
-      setActive((i) => (filtered.length === 0 ? 0 : (i + step + filtered.length) % filtered.length));
+      setActive((i) => (total === 0 ? 0 : (i + step + total) % total));
     } else if (event.key === 'Enter' && open) {
       event.preventDefault();
       const option = filtered[active];
       if (option) choose(option);
+      else if (canCreate && active === filtered.length) create();
     } else if (event.key === 'Escape' && open) {
       event.preventDefault();
       setOpen(false);
@@ -81,7 +94,13 @@ export function Combobox({ id, options, value, onChange, placeholder, invalid }:
     }
   }
 
-  const activeOption = open ? filtered[active] : undefined;
+  const activeId = !open
+    ? undefined
+    : filtered[active]
+      ? `${id}-op-${filtered[active].id}`
+      : canCreate && active === filtered.length
+        ? `${id}-criar`
+        : undefined;
 
   return (
     <div className={styles.wrap}>
@@ -93,7 +112,7 @@ export function Combobox({ id, options, value, onChange, placeholder, invalid }:
         aria-expanded={open}
         aria-controls={listId}
         aria-autocomplete="list"
-        aria-activedescendant={activeOption ? `${id}-op-${activeOption.id}` : undefined}
+        aria-activedescendant={activeId}
         aria-invalid={invalid}
         autoComplete="off"
         placeholder={placeholder}
@@ -124,29 +143,44 @@ export function Combobox({ id, options, value, onChange, placeholder, invalid }:
 
       {open && (
         <ul ref={listRef} id={listId} role="listbox" className={styles.list}>
-          {filtered.length === 0 ? (
-            <li className={styles.empty}>Nenhum resultado para “{text.trim()}”</li>
-          ) : (
-            filtered.map((option, index) => (
-              <li
-                key={option.id}
-                id={`${id}-op-${option.id}`}
-                role="option"
-                aria-selected={option.id === value}
-                data-index={index}
-                className={`${styles.option} ${index === active ? styles.active : ''}`}
-                onMouseDown={(e) => e.preventDefault()}
-                onMouseEnter={() => setActive(index)}
-                onClick={() => choose(option)}
-              >
-                <span className={styles.optionText}>
-                  <span className={styles.name}>{option.name}</span>
-                  {option.hint && <span className={styles.hint}>{option.hint}</span>}
+          {filtered.map((option, index) => (
+            <li
+              key={option.id}
+              id={`${id}-op-${option.id}`}
+              role="option"
+              aria-selected={option.id === value}
+              data-index={index}
+              className={`${styles.option} ${index === active ? styles.active : ''}`}
+              onMouseDown={(e) => e.preventDefault()}
+              onMouseEnter={() => setActive(index)}
+              onClick={() => choose(option)}
+            >
+              <span className={styles.optionText}>
+                <span className={styles.name}>{option.name}</span>
+                {option.hint && <span className={styles.hint}>{option.hint}</span>}
+              </span>
+              {option.id === value && <Icon name="check" size={16} />}
+            </li>
+          ))}
+          {canCreate && (
+            <li
+              id={`${id}-criar`}
+              role="option"
+              aria-selected={false}
+              data-index={filtered.length}
+              className={`${styles.option} ${styles.create} ${active === filtered.length ? styles.active : ''}`}
+              onMouseDown={(e) => e.preventDefault()}
+              onMouseEnter={() => setActive(filtered.length)}
+              onClick={create}
+            >
+              <span className={styles.optionText}>
+                <span className={styles.name}>
+                  <Icon name="plus" size={14} /> Cadastrar “{typed}”
                 </span>
-                {option.id === value && <Icon name="check" size={16} />}
-              </li>
-            ))
+              </span>
+            </li>
           )}
+          {total === 0 && <li className={styles.empty}>Nenhum resultado para “{typed}”</li>}
         </ul>
       )}
     </div>

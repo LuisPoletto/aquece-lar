@@ -1,13 +1,15 @@
-import { useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { Link, useBlocker, useNavigate, useParams } from 'react-router-dom';
 import { Icon } from '@/components/Icon';
 import { DEFAULT_NOTES, PAYMENT_TERMS, VALID_DAYS, termDiscount } from '@/config/quotes';
+import { CustomerForm, type CustomerDraft } from '@/features/people/CustomerForm';
+import { Modal } from '@/features/people/Modal';
 import { useList } from '@/features/people/useList';
 import { Combobox, type ComboboxOption } from '@/features/quotes/Combobox';
 import { useQuote } from '@/features/quotes/useQuote';
 import { formatBRL, initials, toISODate } from '@/lib/format';
 import { quoteTotals } from '@/lib/quoteTotals';
-import { listCustomers, listSellers } from '@/services/peopleService';
+import { listCustomers, listSellers, newId, saveCustomer } from '@/services/peopleService';
 import { createQuote, listCatalog, updateQuote } from '@/services/quotesService';
 import type { Customer, Seller } from '@/types/people';
 import type { CatalogProduct, QuoteContact, QuoteDetail, QuoteDiscount } from '@/types/quotes';
@@ -110,9 +112,10 @@ interface PickerCardProps {
   contact: QuoteContact | null;
   error?: string;
   onChange: (id: string) => void;
+  onCreate?: (text: string) => void;
 }
 
-function PickerCard({ id, title, placeholder, value, options, contact, error, onChange }: PickerCardProps) {
+function PickerCard({ id, title, placeholder, value, options, contact, error, onChange, onCreate }: PickerCardProps) {
   return (
     <section className={`card ${detailStyles.side}`}>
       <label htmlFor={id} className={detailStyles.sideTitle}>
@@ -125,6 +128,7 @@ function PickerCard({ id, title, placeholder, value, options, contact, error, on
         onChange={onChange}
         placeholder={placeholder}
         invalid={Boolean(error)}
+        onCreate={onCreate}
       />
       {error && <p className={formStyles.error}>{error}</p>}
       {contact && (
@@ -170,10 +174,16 @@ interface QuoteFormProps {
   catalog: CatalogProduct[];
 }
 
-function QuoteForm({ mode, base, customers, sellers, catalog }: QuoteFormProps) {
+function QuoteForm({ mode, base, customers: loadedCustomers, sellers, catalog }: QuoteFormProps) {
   const navigate = useNavigate();
   const text = headText(mode, base?.number ?? '');
   const backTo = base ? `/orcamentos/${base.id}` : '/orcamentos';
+
+  // Clientes cadastrados por aqui entram na lista sem recarregar a página.
+  const [created, setCreated] = useState<Customer[]>([]);
+  const customers = useMemo(() => [...created, ...loadedCustomers], [created, loadedCustomers]);
+  const [newCustomerName, setNewCustomerName] = useState<string | null>(null);
+  const [savingCustomer, setSavingCustomer] = useState(false);
 
   // Cliente e vendedor do orçamento-base são achados pelo nome; se não existirem mais, ficam em branco.
   const [customerId, setCustomerId] = useState(() => customers.find((c) => c.name === base?.customer)?.id ?? '');
@@ -235,12 +245,56 @@ function QuoteForm({ mode, base, customers, sellers, catalog }: QuoteFormProps) 
   );
   const units = lines.reduce((sum, line) => sum + (Number(line.quantity) || 0), 0);
   const today = toISODate(new Date());
+  const productOptions = useMemo(
+    () => catalog.map((p) => ({ id: p.code, name: `${p.code} · ${p.description}`, hint: formatBRL(p.unitPrice) })),
+    [catalog],
+  );
 
-  function chooseCustomer(id: string) {
+  // Compara com o estado inicial para saber se há algo a perder ao sair.
+  const snapshot = JSON.stringify([
+    customerId,
+    sellerId,
+    lines.map(({ code, quantity, unitPrice }) => [code, quantity, unitPrice]),
+    validUntil,
+    paymentTerms,
+    discountType,
+    discountValue,
+    notes,
+  ]);
+  const initialSnapshot = useRef(snapshot);
+  const dirty = snapshot !== initialSnapshot.current;
+  // Depois de salvar, a navegação para o detalhe não deve pedir confirmação.
+  const saved = useRef(false);
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      dirty && !saved.current && currentLocation.pathname !== nextLocation.pathname,
+  );
+
+  // Recarregar ou fechar a aba: o navegador mostra o próprio aviso.
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [dirty]);
+
+  function chooseCustomer(id: string, list: Customer[] = customers) {
     setCustomerId(id);
     // Sugere o vendedor responsável pelo cliente se nenhum foi escolhido.
-    const owner = sellers.find((s) => s.name === customers.find((c) => c.id === id)?.seller);
+    const owner = sellers.find((s) => s.name === list.find((c) => c.id === id)?.seller);
     if (!sellerId && owner) setSellerId(owner.id);
+  }
+
+  async function saveNewCustomer(draft: CustomerDraft) {
+    setSavingCustomer(true);
+    try {
+      const customer = await saveCustomer({ id: newId('c'), quotes: 0, lastQuoteAt: null, ...draft });
+      setCreated((prev) => [customer, ...prev]);
+      setNewCustomerName(null);
+      chooseCustomer(customer.id, [customer]);
+    } finally {
+      setSavingCustomer(false);
+    }
   }
 
   /** Troca entre % e R$ mantendo o mesmo valor descontado. */
@@ -339,6 +393,7 @@ function QuoteForm({ mode, base, customers, sellers, catalog }: QuoteFormProps) 
         mode === 'edit' && base
           ? await updateQuote(base.id, draft)
           : await createQuote(draft, base ? `Criado a partir do orçamento ${base.number}` : undefined);
+      saved.current = true;
       navigate(`/orcamentos/${quote.id}`);
     } catch (error) {
       console.error('Falha ao salvar o orçamento', error);
@@ -395,23 +450,21 @@ function QuoteForm({ mode, base, customers, sellers, catalog }: QuoteFormProps) 
                 const taken = new Set(lines.filter((l) => l.key !== line.key).map((l) => l.code));
                 return (
                   <li key={line.key} className={styles.line}>
-                    <label className={formStyles.field}>
-                      <span className={styles.cellLabel}>Produto</span>
-                      <select
-                        className={formStyles.input}
+                    {/* div, não label: um label em volta repassaria ao campo os cliques na lista. */}
+                    <div className={formStyles.field}>
+                      <label htmlFor={`produto-${line.key}`} className={styles.cellLabel}>
+                        Produto
+                      </label>
+                      <Combobox
+                        id={`produto-${line.key}`}
+                        options={productOptions.filter((p) => !taken.has(p.id))}
                         value={line.code}
-                        onChange={(e) => chooseProduct(line.key, e.target.value)}
-                        aria-invalid={Boolean(lineError?.code)}
-                      >
-                        <option value="">Escolha um produto</option>
-                        {catalog.map((product) => (
-                          <option key={product.code} value={product.code} disabled={taken.has(product.code)}>
-                            {product.code} · {product.description}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(code) => chooseProduct(line.key, code)}
+                        placeholder="Código ou nome do produto"
+                        invalid={Boolean(lineError?.code)}
+                      />
                       {lineError?.code && <p className={formStyles.error}>{lineError.code}</p>}
-                    </label>
+                    </div>
                     <label className={formStyles.field}>
                       <span className={styles.cellLabel}>Qtd.</span>
                       <input
@@ -569,7 +622,8 @@ function QuoteForm({ mode, base, customers, sellers, catalog }: QuoteFormProps) 
             options={customerOptions}
             contact={customerContact}
             error={errors.customer}
-            onChange={chooseCustomer}
+            onChange={(id) => chooseCustomer(id)}
+            onCreate={setNewCustomerName}
           />
           <PickerCard
             id="vendedor"
@@ -583,6 +637,33 @@ function QuoteForm({ mode, base, customers, sellers, catalog }: QuoteFormProps) 
           />
         </div>
       </form>
+
+      <Modal open={newCustomerName !== null} title="Novo cliente" onClose={() => setNewCustomerName(null)}>
+        {newCustomerName !== null && (
+          <CustomerForm
+            initial={{ name: newCustomerName, seller: seller?.name ?? '' }}
+            sellers={sellers.map((s) => s.name)}
+            busy={savingCustomer}
+            onSubmit={saveNewCustomer}
+            onCancel={() => setNewCustomerName(null)}
+          />
+        )}
+      </Modal>
+
+      <Modal open={blocker.state === 'blocked'} title="Descartar alterações?" onClose={() => blocker.reset?.()} size="sm">
+        <p className={formStyles.text}>
+          {mode === 'edit' ? 'As alterações neste orçamento ainda não foram salvas.' : 'Este orçamento ainda não foi salvo.'}{' '}
+          Se sair agora, o que foi preenchido será perdido.
+        </p>
+        <div className={formStyles.actions}>
+          <button type="button" className="btn btn-secondary" onClick={() => blocker.reset?.()}>
+            Continuar editando
+          </button>
+          <button type="button" className={`btn ${formStyles.dangerBtn}`} onClick={() => blocker.proceed?.()}>
+            Descartar e sair
+          </button>
+        </div>
+      </Modal>
     </>
   );
 }

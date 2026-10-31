@@ -20,7 +20,8 @@ function validate(draft: CustomerDraft): Errors {
 }
 
 interface CustomerFormProps {
-  initial?: Customer;
+  /** Cliente em edição, ou só alguns campos já sabidos num cadastro novo (ex.: o nome digitado). */
+  initial?: Partial<CustomerDraft>;
   sellers: string[];
   busy: boolean;
   onSubmit: (draft: CustomerDraft) => void;
@@ -28,7 +29,7 @@ interface CustomerFormProps {
 }
 
 export function CustomerForm({ initial, sellers, busy, onSubmit, onCancel }: CustomerFormProps) {
-  const [draft, setDraft] = useState<CustomerDraft>(initial ?? EMPTY);
+  const [draft, setDraft] = useState<CustomerDraft>({ ...EMPTY, ...initial });
   const [errors, setErrors] = useState<Errors>({});
   // Mantém o vendedor atual na lista mesmo que ele tenha sido excluído.
   const sellerOptions = draft.seller && !sellers.includes(draft.seller) ? [draft.seller, ...sellers] : sellers;

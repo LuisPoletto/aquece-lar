@@ -30,8 +30,11 @@
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  right: 0;
   z-index: 20;
+  /* Pelo menos a largura do campo; em colunas estreitas (produto) cresce até caber o texto. */
+  min-width: 100%;
+  width: max-content;
+  max-width: min(440px, calc(100vw - 32px));
   max-height: 260px;
   overflow-y: auto;
   margin: 0;
@@ -76,6 +79,17 @@
 .hint {
   font-size: 12px;
   color: var(--text-3);
+}
+
+.create {
+  color: var(--accent-ink);
+}
+
+.create .name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
 }
 
 .empty {
