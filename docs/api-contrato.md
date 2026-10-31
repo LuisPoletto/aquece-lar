@@ -1,0 +1,263 @@
+# Contrato da API — Aquece Lar
+
+Este documento descreve o que o frontend espera da API. Hoje o front funciona com mocks em memória: cada tela chama uma função em `src/services/`, e cada uma dessas funções vai virar uma chamada HTTP **com a mesma assinatura**. Os tipos citados aqui estão em `src/types/`.
+
+O objetivo é que a API devolva os dados no formato abaixo para que a troca seja só dentro de `src/services/`, sem mexer nas telas. Onde o front de hoje faz algo que deveria ser da API, isso está na seção [Pontos para decidir](#pontos-para-decidir).
+
+## Convenções
+
+- **JSON em camelCase**, com os mesmos nomes de campo dos tipos do front.
+- **Datas:** dia como `AAAA-MM-DD`; data/hora como ISO 8601 com fuso (`2026-10-30T09:42:00-03:00`). O fuso de referência do negócio é `America/Sao_Paulo`: o filtro por período usa o dia local da criação.
+- **Dinheiro:** número em reais com até 2 casas (`3600.5`). A API pode guardar em centavos ou decimal, mas deve devolver assim.
+- **IDs:** string. Gerados pela API (veja [Pontos para decidir](#pontos-para-decidir)).
+- **Cancelamento:** o front cancela requisições ao trocar de tela (`AbortSignal` → `fetch(..., { signal })`). Não precisa de nada na API.
+- **Erros:** status HTTP + corpo `{ "error": "<codigo>", "message": "<texto para o usuário>" }`. O front mostra `message` quando faz sentido.
+
+| Situação | HTTP | `error` |
+|---|---|---|
+| Dados inválidos (campo faltando, período inválido) | 400 | `validation` / `invalid_period` |
+| Registro não existe | 404 | `not_found` |
+| Código de produto já usado | 409 | `duplicate_product_code` |
+| Orçamento não pode mais ser editado | 409 | `quote_not_editable` |
+| Transição de status não permitida | 409 | `invalid_status_transition` |
+
+## Mapa das funções → endpoints
+
+| Função no front | Endpoint sugerido | Telas |
+|---|---|---|
+| `getDashboard(period)` | `GET /dashboard?from=&to=` | Dashboard |
+| `listQuotes(period)` | `GET /quotes?from=&to=` | Lista de orçamentos |
+| `getQuote(id)` | `GET /quotes/:id` | Detalhe, editar, duplicar |
+| `createQuote(draft, note?)` | `POST /quotes` | Novo, duplicar |
+| `updateQuote(id, draft)` | `PUT /quotes/:id` | Editar |
+| `updateQuoteStatus(id, status)` | `POST /quotes/:id/status` | Detalhe |
+| `listSellers()` / `saveSeller()` / `deleteSeller(id)` | `GET` / `POST`·`PUT` / `DELETE /sellers[/:id]` | Vendedores, orçamento, clientes |
+| `listCustomers()` / `saveCustomer()` / `deleteCustomer(id)` | `GET` / `POST`·`PUT` / `DELETE /customers[/:id]` | Clientes, orçamento |
+| `listProducts()` / `saveProduct()` / `deleteProduct(id)` | `GET` / `POST`·`PUT` / `DELETE /products[/:id]` | Produtos, orçamento |
+
+`save*` hoje cria ou atualiza conforme o id já existir. Na API: `POST` cria (sem id, devolve o registro com id), `PUT /:id` atualiza.
+
+---
+
+## Período
+
+Usado no dashboard e na lista de orçamentos.
+
+```ts
+interface Period {
+  from: string; // AAAA-MM-DD
+  to: string;   // AAAA-MM-DD
+}
+```
+
+Regras (hoje em `validatePeriod`, em `dashboardService.ts`): as duas datas válidas, `from <= to`, no máximo **366 dias** contando os dois extremos. Fora disso: 400 `invalid_period`.
+
+## Dashboard — `GET /dashboard?from=&to=`
+
+```ts
+interface DashboardData {
+  kpis: Kpi[];
+  daily: DailyPoint[];      // um ponto por dia do período, em ordem
+  ranking: SellerRank[];
+  recentQuotes: Quote[];    // os 10 mais recentes
+}
+
+interface DailyPoint {
+  date: string;      // AAAA-MM-DD
+  quantity: number;  // orçamentos criados no dia
+  amount: number;    // soma dos valores do dia
+  partial: boolean;  // true no dia de hoje (ainda em andamento)
+}
+
+interface SellerRank { id: string; name: string; quotes: number; amount: number }
+```
+
+`Kpi` hoje carrega texto pronto e o ícone (veja [Pontos para decidir](#pontos-para-decidir)).
+
+## Orçamentos
+
+### Tipos
+
+```ts
+type QuoteStatus = 'Pendente' | 'Enviado' | 'Aprovado' | 'Cancelado';
+
+/** Linha da listagem (lista e dashboard). */
+interface Quote {
+  id: string;
+  number: string;     // "#1182", sequencial, definido pela API
+  customer: string;   // nome do cliente
+  seller: string;     // nome do vendedor
+  amount: number;     // total já com desconto
+  status: QuoteStatus;
+  createdAt: string;  // data/hora ISO
+}
+
+interface QuoteDetail extends Quote {
+  customerInfo: QuoteContact;
+  sellerInfo: QuoteContact;
+  items: QuoteItem[];
+  validUntil: string;            // AAAA-MM-DD
+  paymentTerms: string;
+  discount: QuoteDiscount | null;
+  notes: string;
+  history: QuoteEvent[];         // do mais antigo para o mais novo
+}
+
+interface QuoteContact {
+  name: string;
+  detail: string;  // documento do cliente ou e-mail do vendedor
+  phone: string;
+  city?: string;
+}
+
+interface QuoteItem { code: string; description: string; quantity: number; unitPrice: number }
+
+interface QuoteDiscount {
+  type: 'percent' | 'amount';
+  value: number; // 0–100 se percent; reais se amount
+}
+
+interface QuoteEvent {
+  status: QuoteStatus; // status do orçamento depois do evento
+  at: string;          // data/hora ISO
+  note: string;        // texto mostrado na linha do tempo
+}
+
+/** Corpo de POST /quotes e PUT /quotes/:id. */
+type QuoteDraft = Pick<QuoteDetail,
+  'customerInfo' | 'sellerInfo' | 'items' | 'validUntil' | 'paymentTerms' | 'discount' | 'notes'>;
+```
+
+`customerInfo` e `sellerInfo` são uma **cópia** dos dados no momento do orçamento: se o cliente mudar de telefone depois, o orçamento antigo continua com o telefone que foi enviado.
+
+### Cálculo do valor
+
+A API deve **calcular** o total, sem confiar no valor enviado. A regra é a de `src/lib/quoteTotals.ts`:
+
+1. `subtotal` = soma de `quantity × unitPrice`, arredondada em centavos.
+2. `desconto` = `subtotal × value / 100` (percent) ou `value` (amount), limitado entre 0 e o subtotal, arredondado em centavos.
+3. `amount` = `subtotal − desconto`.
+
+Exemplo: 2 × 3.790 + 1 × 650 = 8.230; com 5% → desconto 411,50 → total **7.818,50**.
+
+### `GET /quotes?from=&to=`
+
+Orçamentos **criados** no período (pelo dia local de `createdAt`), do mais recente para o mais antigo. Devolve `Quote[]`. A busca, o filtro de status e a paginação (15 por página) são feitos no front hoje; se o volume crescer, dá para levar para a API.
+
+### `GET /quotes/:id`
+
+Devolve `QuoteDetail`. 404 se não existir.
+
+### `POST /quotes`
+
+Corpo: `QuoteDraft`, mais `copiedFromId?: string` quando for uma cópia (tela Duplicar).
+
+A API:
+
+- valida: ao menos 1 item; `quantity` inteiro ≥ 1; `unitPrice` > 0; `validUntil` não anterior a hoje; desconto entre 0 e 100% ou entre 0 e o subtotal;
+- define `id`, `number` (próximo da sequência), `status: 'Pendente'`, `createdAt` e `amount`;
+- cria o primeiro evento do histórico: `"Orçamento criado"`, ou `"Criado a partir do orçamento #1179"` quando vier `copiedFromId`.
+
+Devolve o `Quote` criado (o front navega para `/orcamentos/:id`).
+
+### `PUT /quotes/:id`
+
+Corpo: `QuoteDraft`. **Só para orçamentos `Pendente`**; nos outros status: 409 `quote_not_editable` (o front oferece duplicar). Recalcula `amount`, atualiza `customer`/`seller` e acrescenta o evento `"Orçamento editado"` (status `Pendente`). Devolve o `Quote` atualizado.
+
+### `POST /quotes/:id/status`
+
+Corpo: `{ "status": QuoteStatus }`. Transições permitidas (as mesmas que a tela de detalhe oferece):
+
+| De | Para | Evento no histórico |
+|---|---|---|
+| Pendente | Enviado | "Enviado ao cliente" |
+| Pendente | Cancelado | "Orçamento cancelado" |
+| Enviado | Aprovado | "Aprovado pelo cliente" |
+| Enviado | Cancelado | "Orçamento cancelado" |
+| Cancelado | Pendente | "Voltou para pendente" (Reabrir) |
+
+`Aprovado` é final. Qualquer outra: 409 `invalid_status_transition`.
+
+**WhatsApp:** o envio pelo WhatsApp deve gerar a transição Pendente → Enviado com o evento `"Enviado ao cliente por WhatsApp"` (texto que os mocks já usam). Uma opção é um endpoint próprio, `POST /quotes/:id/send` com `{ "channel": "whatsapp" }`, que envia e registra a transição.
+
+## Vendedores — `/sellers`
+
+```ts
+interface Seller {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  region: string;
+  status: 'Ativo' | 'Inativo';
+  quotes: number; // orçamentos no mês corrente (calculado pela API)
+  amount: number; // valor orçado no mês corrente (calculado pela API)
+}
+```
+
+Corpo de criação/edição: `name`, `email`, `phone`, `region`, `status`. Validação: `name` com 3+ caracteres, `email` válido. Só vendedores **ativos** aparecem no orçamento.
+
+## Clientes — `/customers`
+
+```ts
+interface Customer {
+  id: string;
+  name: string;
+  kind: 'PF' | 'PJ';
+  document: string;           // CPF ou CNPJ como digitado (os mocks usam formatado)
+  phone: string;
+  city: string;
+  seller: string;             // nome do vendedor responsável ('' = nenhum)
+  quotes: number;             // total de orçamentos (calculado pela API)
+  lastQuoteAt: string | null; // data/hora do último orçamento (calculado pela API)
+}
+```
+
+Corpo de criação/edição: `name`, `kind`, `document`, `phone`, `city`, `seller`. Validação: `name` com 3+ caracteres; `document` opcional, mas se vier precisa ter 11 dígitos (PF) ou 14 (PJ). O front também cadastra clientes de dentro do formulário de orçamento, usando o mesmo endpoint.
+
+## Produtos — `/products`
+
+```ts
+interface Product {
+  id: string;
+  code: string;        // único, sem diferenciar maiúsculas; guardado em maiúsculas
+  description: string;
+  category: 'Aquecedores a gás' | 'Boilers' | 'Lareiras' | 'Piscina' | 'Acessórios' | 'Serviços';
+  unitPrice: number;   // preço de tabela (o orçamento pode alterar por item)
+  status: 'Ativo' | 'Inativo';
+}
+```
+
+Regras:
+
+- `code` obrigatório e único (`aqg-20d` conflita com `AQG-20D`): 409 `duplicate_product_code`. `description` com 3+ caracteres; `unitPrice` > 0.
+- **Ordem do `GET`:** ativos primeiro, inativos depois. Um produto novo entra no topo; um produto que acabou de ser inativado vai para o fim da lista. Sugestão: ativos por `createdAt` decrescente e inativos por `inactivatedAt` crescente.
+- Só produtos **ativos** aparecem na busca do orçamento. Ao editar ou duplicar um orçamento antigo, os itens de produtos inativos ou excluídos continuam aparecendo (o front resolve isso com os dados do próprio item).
+
+---
+
+## Pontos para decidir
+
+Coisas que o front faz hoje porque não há backend, e que devem mudar quando a API existir. A coluna da direita diz o que muda no front.
+
+| Hoje no front | Proposta | Impacto no front |
+|---|---|---|
+| IDs gerados no navegador (`newId('c')`, `newId('p')`…) | A API gera o id no `POST` e devolve o registro | Pequeno: só em `src/services/` |
+| Orçamento guarda cliente e vendedor **pelo nome** (`customer`, `seller`); ao editar, o front procura pelo nome | Guardar também `customerId` e `sellerId` no orçamento e no `QuoteDraft` | Médio: formulário passa a enviar os ids |
+| Cliente guarda o vendedor responsável pelo nome (`seller`) | `sellerId` no cliente | Pequeno |
+| `Kpi.value` vem como texto pronto (`"R$ 1.234"`), com `icon` e `delta` em texto | API devolve números (`total`, `previous`); front formata e escolhe o ícone | Médio: dashboard |
+| Transições de status não são validadas no serviço (só a tela limita os botões) | API valida conforme a tabela acima | Nenhum |
+| Total calculado no front e enviado pronto | API recalcula com a regra acima e ignora o valor enviado | Nenhum |
+| PDF gerado pela impressão do navegador | Pode continuar assim; se o WhatsApp precisar anexar o PDF, gerar no servidor | Nenhum por enquanto |
+| Excluir vendedor ou produto não confere se está em uso | Bloquear (409) ou sugerir inativar quando houver orçamentos ou clientes ligados | Pequeno: tratar a mensagem |
+| Sem autenticação (topo mostra "Administrador") | Definir login e perfis | Médio: tela de login e token nas chamadas |
+| Lista de orçamentos sem paginação na API | Ok para o volume atual; paginar no servidor se crescer | Médio, só se for paginar |
+
+## Como o front vai trocar
+
+1. Criar `VITE_API_URL` no `.env`.
+2. Em cada arquivo de `src/services/`, trocar `fromMock(() => ...)` por `fetch` para o endpoint correspondente, mantendo a assinatura da função.
+3. Converter as respostas de erro nas classes que as telas já tratam (`QuoteNotFoundError`, `DuplicateProductCodeError`, `InvalidPeriodError`).
+4. Apagar `src/services/mocks/` e ajustar os testes de serviço para usar um servidor falso (por exemplo, MSW).
+
+Os testes de tela (`npm test`) usam os dados dos mocks (por exemplo, o orçamento #1181 pendente e o cliente "Restaurante Brasa Viva"). Na troca, esses dados viram fixtures do servidor falso, e os testes continuam conferindo o mesmo comportamento.

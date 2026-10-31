@@ -57,4 +57,4 @@ prototipo/        mockup HTML original (referência visual)
 
 Cadastros, edições, mudanças de status e orçamentos novos ficam em memória e se perdem ao recarregar a página.
 
-O backend ainda não faz parte deste projeto. Para ligar uma API, substitua as funções em `src/services/` (mantendo as assinaturas) e remova os mocks em `src/services/mocks/`.
+O backend ainda não faz parte deste projeto. Para ligar uma API, substitua as funções em `src/services/` (mantendo as assinaturas) e remova os mocks em `src/services/mocks/`. O que o front espera de cada endpoint (formatos, regras e erros) está em [docs/api-contrato.md](docs/api-contrato.md).
