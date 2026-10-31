@@ -59,6 +59,25 @@
   font-weight: 600;
 }
 
+/* Queda em relação ao período anterior: vermelho e seta para baixo. */
+.down {
+  background: var(--err-bg);
+  color: var(--err);
+}
+
+.down svg {
+  transform: scaleY(-1);
+}
+
+.flat {
+  background: var(--subtle);
+  color: var(--text-2);
+}
+
+.flat svg {
+  display: none;
+}
+
 .note {
   color: var(--text-3);
 }

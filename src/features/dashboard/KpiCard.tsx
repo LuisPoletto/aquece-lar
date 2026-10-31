@@ -2,6 +2,13 @@ import { Icon } from '@/components/Icon';
 import type { Kpi } from '@/types/dashboard';
 import styles from './KpiCard.module.css';
 
+/** Queda fica vermelha; sem variação (ou sem base de comparação), neutra. */
+function trendClass(delta: string): string {
+  if (delta.startsWith('-')) return styles.down ?? '';
+  if (delta === '0' || delta === '0%' || delta === '—') return styles.flat ?? '';
+  return '';
+}
+
 export function KpiCard({ kpi }: { kpi: Kpi }) {
   return (
     <div className={`card ${styles.card}`}>
@@ -13,7 +20,7 @@ export function KpiCard({ kpi }: { kpi: Kpi }) {
       </div>
       <span className={styles.value}>{kpi.value}</span>
       <div className={styles.foot}>
-        <span className={styles.delta}>
+        <span className={`${styles.delta} ${trendClass(kpi.delta)}`}>
           <Icon name="trend" size={12} />
           {kpi.delta}
         </span>

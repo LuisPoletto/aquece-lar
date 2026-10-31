@@ -47,7 +47,7 @@ prototipo/        mockup HTML original (referência visual)
 
 ## Comportamento atual
 
-- Dashboard com período filtrável, KPIs, gráfico diário (quantidade/valor), ranking e últimos orçamentos
+- Dashboard com período filtrável, KPIs, gráfico diário (quantidade/valor), ranking e últimos orçamentos, tudo calculado a partir dos orçamentos (um orçamento novo aparece na hora)
 - Sidebar recolhível no desktop e gaveta no mobile
 - Tema claro/escuro persistido em `localStorage`
 - Orçamentos: lista com período, busca, filtro de status e paginação; detalhe com troca de status e PDF pela impressão do navegador; criação de orçamento com cliente, vendedor e produto buscáveis pelo nome (com cadastro de cliente ali mesmo), desconto (% ou R$, sugerido pela condição de pagamento) e condições, avisando antes de sair com alterações não salvas; edição de pendentes e cópia de qualquer orçamento
@@ -55,6 +55,6 @@ prototipo/        mockup HTML original (referência visual)
 - Produtos: listagem com busca e filtro de status, cadastro com código único, categoria e preço de tabela; os ativos formam o catálogo do orçamento
 - Linhas, fotos, fluxogramas, conversas, equivalências e configurações ainda são placeholders
 
-Cadastros, edições, mudanças de status e orçamentos novos ficam em memória e se perdem ao recarregar a página.
+Cadastros, edições, mudanças de status e orçamentos novos ficam em memória e se perdem ao recarregar a página. As datas dos orçamentos de exemplo acompanham o relógio (o mais recente é de ontem), e as contagens de orçamentos de clientes e vendedores são calculadas sobre eles.
 
 O backend ainda não faz parte deste projeto. Para ligar uma API, substitua as funções em `src/services/` (mantendo as assinaturas) e remova os mocks em `src/services/mocks/`. O que o front espera de cada endpoint (formatos, regras e erros) está em [docs/api-contrato.md](docs/api-contrato.md).

@@ -59,7 +59,7 @@ interface DashboardData {
   kpis: Kpi[];
   daily: DailyPoint[];      // um ponto por dia do período, em ordem
   ranking: SellerRank[];
-  recentQuotes: Quote[];    // os 10 mais recentes
+  recentQuotes: Quote[];    // os 10 mais recentes do período
 }
 
 interface DailyPoint {
@@ -72,7 +72,14 @@ interface DailyPoint {
 interface SellerRank { id: string; name: string; quotes: number; amount: number }
 ```
 
-`Kpi` hoje carrega texto pronto e o ícone (veja [Pontos para decidir](#pontos-para-decidir)).
+Tudo sai dos mesmos orçamentos de `GET /quotes`, para que um orçamento novo apareça no dashboard na hora (a simulação está em `src/services/mocks/dashboardMock.ts`):
+
+- **Total de orçamentos** e **Valor total**: quantidade e soma de `amount` no período, com a variação percentual sobre o período anterior de mesmo tamanho (`"+12%"`, `"-8%"`; `"—"` quando o anterior foi zero).
+- **Clientes atendidos**: clientes distintos com orçamento no período, com a diferença absoluta sobre o período anterior (`"+3"`, `"-1"`, `"0"`).
+- **Vendedores ativos**: ativos no cadastro, com `"6 de 8"` no lugar da variação.
+- **Ranking**: um item por vendedor ativo, com quantidade e soma no período (o front ordena por valor).
+
+O front pinta a variação de vermelho quando começa com `-` e de neutro quando é `0`, `0%` ou `—`. `Kpi` hoje carrega texto pronto e o ícone (veja [Pontos para decidir](#pontos-para-decidir)).
 
 ## Orçamentos
 

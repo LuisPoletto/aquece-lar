@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest';
+import { toISODate } from '@/lib/format';
 import { quoteTotals } from '@/lib/quoteTotals';
 import type { QuoteDraft } from '@/types/quotes';
 import { createQuote, getQuote, listQuotes, QuoteNotFoundError, updateQuote, updateQuoteStatus } from './quotesService';
 
-const YEAR = { from: '2026-01-01', to: '2026-12-31' };
+// Os mocks andam com o relógio; os últimos 366 dias cobrem todos eles.
+const now = new Date();
+const YEAR = {
+  from: toISODate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 365)),
+  to: toISODate(now),
+};
 
 function draft(overrides: Partial<QuoteDraft> = {}): QuoteDraft {
   return {

@@ -1,8 +1,7 @@
 import type { Period, QuoteStatus } from '@/types/dashboard';
 import type { Quote, QuoteDetail, QuoteDraft, QuoteEvent } from '@/types/quotes';
-import { toISODate } from '@/lib/format';
 import { quoteTotals } from '@/lib/quoteTotals';
-import { validatePeriod } from './dashboardService';
+import { inPeriod, validatePeriod } from './period';
 import { fromMock } from './mockLatency';
 import { buildHistory, buildQuoteDetail } from './mocks/quoteDetailMock';
 import { QUOTES_MOCK } from './mocks/quotesMock';
@@ -23,15 +22,21 @@ export class QuoteNotFoundError extends Error {
   }
 }
 
+/**
+ * Leitura direta da cópia em memória, para os outros serviços simulados
+ * (dashboard e contagens de clientes e vendedores) calcularem sobre os mesmos
+ * orçamentos. Com a API, esses números vêm prontos do servidor.
+ */
+export function quotesSnapshot(): readonly Quote[] {
+  return quotes;
+}
+
 /** Orçamentos criados no período, do mais recente para o mais antigo. */
 export function listQuotes(period: Period, signal?: AbortSignal): Promise<Quote[]> {
   return fromMock(() => {
     validatePeriod(period);
     return quotes
-      .filter((q) => {
-        const day = toISODate(new Date(q.createdAt));
-        return day >= period.from && day <= period.to;
-      })
+      .filter((q) => inPeriod(q.createdAt, period))
       .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
   }, signal);
 }

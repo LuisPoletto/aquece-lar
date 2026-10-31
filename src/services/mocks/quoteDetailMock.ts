@@ -8,8 +8,9 @@ import { PRODUCTS_MOCK } from './productsMock';
 const CATALOG = PRODUCTS_MOCK.filter((p) => p.status === 'Ativo');
 import { CUSTOMERS_MOCK, SELLERS_MOCK } from './peopleMock';
 
+/** Nunca no futuro: um orçamento de ontem não pode ter sido aprovado "amanhã". */
 function hoursAfter(iso: string, hours: number): string {
-  return new Date(Date.parse(iso) + hours * 3_600_000).toISOString();
+  return new Date(Math.min(Date.parse(iso) + hours * 3_600_000, Date.now())).toISOString();
 }
 
 /**
