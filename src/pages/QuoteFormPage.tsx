@@ -6,11 +6,13 @@ import { CustomerForm, type CustomerDraft } from '@/features/people/CustomerForm
 import { Modal } from '@/features/people/Modal';
 import { useList } from '@/features/people/useList';
 import { Combobox, type ComboboxOption } from '@/features/quotes/Combobox';
+import { catalogFor } from '@/features/quotes/catalog';
 import { useQuote } from '@/features/quotes/useQuote';
 import { formatBRL, initials, toISODate } from '@/lib/format';
 import { quoteTotals } from '@/lib/quoteTotals';
 import { listCustomers, listSellers, newId, saveCustomer } from '@/services/peopleService';
-import { createQuote, listCatalog, updateQuote } from '@/services/quotesService';
+import { listProducts } from '@/services/productsService';
+import { createQuote, updateQuote } from '@/services/quotesService';
 import type { Customer, Seller } from '@/types/people';
 import type { CatalogProduct, QuoteContact, QuoteDetail, QuoteDiscount } from '@/types/quotes';
 import formStyles from '@/features/people/Form.module.css';
@@ -674,7 +676,7 @@ export function QuoteFormPage({ mode }: { mode: QuoteFormMode }) {
   const [reloadKey, setReloadKey] = useState(0);
   const customersState = useList(listCustomers, 'Não foi possível carregar os clientes.', reloadKey);
   const sellersState = useList(listSellers, 'Não foi possível carregar os vendedores.', reloadKey);
-  const catalogState = useList(listCatalog, 'Não foi possível carregar os produtos.', reloadKey);
+  const productsState = useList(listProducts, 'Não foi possível carregar os produtos.', reloadKey);
   const baseState = useQuote(mode === 'new' ? null : id, reloadKey);
 
   const activeSellers = useMemo(
@@ -683,6 +685,10 @@ export function QuoteFormPage({ mode }: { mode: QuoteFormMode }) {
   );
 
   const base = baseState.data;
+  const catalog = useMemo(
+    () => (productsState.data ? catalogFor(productsState.data, base) : null),
+    [productsState.data, base],
+  );
   const text = headText(mode, base?.number ?? `#${id}`);
   const backTo = mode === 'new' ? '/orcamentos' : `/orcamentos/${id}`;
   const backLabel = mode === 'new' ? 'Orçamentos' : `Orçamento #${id}`;
@@ -722,9 +728,8 @@ export function QuoteFormPage({ mode }: { mode: QuoteFormMode }) {
     );
   }
 
-  const loadError = [customersState, sellersState, catalogState, baseState].find((s) => s.status === 'error');
+  const loadError = [customersState, sellersState, productsState, baseState].find((s) => s.status === 'error');
   const customers = customersState.data;
-  const catalog = catalogState.data;
 
   if (customers && sellersState.data && catalog && (mode === 'new' || baseState.status === 'success')) {
     return (

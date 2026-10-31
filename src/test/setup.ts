@@ -1,6 +1,10 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach } from 'vitest';
+
+// Os serviços simulam 250 ms por chamada; com a máquina ocupada, várias em
+// sequência passam do 1 s padrão do findBy/waitFor e o teste falha à toa.
+configure({ asyncUtilTimeout: 4000 });
 
 afterEach(() => {
   cleanup();

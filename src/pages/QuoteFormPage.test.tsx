@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider, useParams } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
+import { saveProduct } from '@/services/productsService';
 import { getQuote } from '@/services/quotesService';
 import { QuoteFormPage } from './QuoteFormPage';
 
@@ -106,6 +107,30 @@ describe('novo orçamento', () => {
     await screen.findByText('PT'); // iniciais no cartão do cliente
     expect(field).toHaveValue('Padaria Teste');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
+describe('catálogo vindo do cadastro de produtos', () => {
+  it('oferece um produto recém-cadastrado e esconde os inativos', async () => {
+    await saveProduct({
+      id: 'p-teste',
+      code: 'TRM-01',
+      description: 'Termostato digital de parede',
+      category: 'Acessórios',
+      unitPrice: 320,
+      status: 'Ativo',
+    });
+    const { user } = renderAt('/orcamentos/novo');
+    await customerField();
+    const product = screen.getByRole('combobox', { name: 'Produto' });
+
+    await user.type(product, 'termostato');
+    expect(screen.getByRole('option', { name: /TRM-01 · Termostato digital de parede/ })).toBeInTheDocument();
+
+    await user.clear(product);
+    await user.type(product, 'AQG-15M'); // inativo no cadastro
+    expect(screen.queryByRole('option', { name: /AQG-15M/ })).not.toBeInTheDocument();
+    expect(screen.getByText(/Nenhum resultado/)).toBeInTheDocument();
   });
 });
 

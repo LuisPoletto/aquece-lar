@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { CustomersPage } from '@/pages/CustomersPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
+import { ProductsPage } from '@/pages/ProductsPage';
 import { QuoteFormPage } from '@/pages/QuoteFormPage';
 import { QuotesPage } from '@/pages/QuotesPage';
 import { QuoteDetailPage } from '@/pages/QuoteDetailPage';
@@ -22,7 +23,7 @@ const router = createBrowserRouter(
       <Route path="orcamentos" element={<QuotesPage />} />
       <Route path="vendedores" element={<SellersPage />} />
       <Route path="clientes" element={<CustomersPage />} />
-      <Route path="produtos" element={<PlaceholderPage />} />
+      <Route path="produtos" element={<ProductsPage />} />
       <Route path="linhas" element={<PlaceholderPage />} />
       <Route path="fotos" element={<PlaceholderPage />} />
       <Route path="fluxogramas" element={<PlaceholderPage />} />

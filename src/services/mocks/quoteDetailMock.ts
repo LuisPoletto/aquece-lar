@@ -2,7 +2,10 @@ import type { Quote, QuoteDetail, QuoteEvent, QuoteItem } from '@/types/quotes';
 import { toISODate } from '@/lib/format';
 import { quoteTotals } from '@/lib/quoteTotals';
 import { DEFAULT_NOTES, PAYMENT_TERMS, VALID_DAYS, termDiscount } from '@/config/quotes';
-import { CATALOG_MOCK } from './catalogMock';
+import { PRODUCTS_MOCK } from './productsMock';
+
+/** Os orçamentos gerados usam só produtos ativos, sempre na mesma ordem. */
+const CATALOG = PRODUCTS_MOCK.filter((p) => p.status === 'Ativo');
 import { CUSTOMERS_MOCK, SELLERS_MOCK } from './peopleMock';
 
 function hoursAfter(iso: string, hours: number): string {
@@ -28,7 +31,7 @@ function subtotalFor(amount: number, percent: number): number | null {
 function buildItems(quote: Quote, subtotal: number): QuoteItem[] {
   const seed = Number(quote.id) || 0;
   const count = 2 + (seed % 3);
-  const picked = Array.from({ length: count }, (_, i) => CATALOG_MOCK[(seed * 7 + i * 4) % CATALOG_MOCK.length]!);
+  const picked = Array.from({ length: count }, (_, i) => CATALOG[(seed * 7 + i * 4) % CATALOG.length]!);
   // O preço de tabela serve só de peso: o valor final vem do total do mock.
   const weights = picked.map((p, i) => p.unitPrice * (i === 0 ? 2 : 1));
   const weightSum = weights.reduce((a, b) => a + b, 0);

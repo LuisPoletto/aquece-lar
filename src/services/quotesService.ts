@@ -1,10 +1,9 @@
 import type { Period, QuoteStatus } from '@/types/dashboard';
-import type { CatalogProduct, Quote, QuoteDetail, QuoteDraft, QuoteEvent } from '@/types/quotes';
+import type { Quote, QuoteDetail, QuoteDraft, QuoteEvent } from '@/types/quotes';
 import { toISODate } from '@/lib/format';
 import { quoteTotals } from '@/lib/quoteTotals';
 import { validatePeriod } from './dashboardService';
 import { fromMock } from './mockLatency';
-import { CATALOG_MOCK } from './mocks/catalogMock';
 import { buildHistory, buildQuoteDetail } from './mocks/quoteDetailMock';
 import { QUOTES_MOCK } from './mocks/quotesMock';
 
@@ -45,10 +44,6 @@ export function getQuote(id: string, signal?: AbortSignal): Promise<QuoteDetail>
     const draft = drafts.get(id);
     return draft ? { ...quote, ...draft, history: events } : buildQuoteDetail(quote, events);
   }, signal);
-}
-
-export function listCatalog(signal?: AbortSignal): Promise<CatalogProduct[]> {
-  return fromMock(() => CATALOG_MOCK, signal);
 }
 
 /** Campos da listagem que derivam do formulário. */

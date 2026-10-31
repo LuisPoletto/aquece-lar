@@ -77,6 +77,16 @@
   font-size: 14px;
 }
 
+/* Tabelas com poucas colunas (produtos) não precisam rolar tão cedo. */
+.tableNarrow {
+  min-width: 600px;
+}
+
+/* Descrições de produto são longas: quebram linha em vez de forçar rolagem. */
+.table.tableNarrow .name {
+  white-space: normal;
+}
+
 .table th {
   padding: 10px 12px;
   font-weight: 600;

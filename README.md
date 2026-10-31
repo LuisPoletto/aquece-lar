@@ -52,7 +52,8 @@ prototipo/        mockup HTML original (referência visual)
 - Tema claro/escuro persistido em `localStorage`
 - Orçamentos: lista com período, busca, filtro de status e paginação; detalhe com troca de status e PDF pela impressão do navegador; criação de orçamento com cliente, vendedor e produto buscáveis pelo nome (com cadastro de cliente ali mesmo), desconto (% ou R$, sugerido pela condição de pagamento) e condições, avisando antes de sair com alterações não salvas; edição de pendentes e cópia de qualquer orçamento
 - Vendedores e clientes: listagem com busca e filtros, cadastro, edição e exclusão
-- Produtos, linhas, fotos, fluxogramas, conversas, equivalências e configurações ainda são placeholders
+- Produtos: listagem com busca e filtro de status, cadastro com código único, categoria e preço de tabela; os ativos formam o catálogo do orçamento
+- Linhas, fotos, fluxogramas, conversas, equivalências e configurações ainda são placeholders
 
 Cadastros, edições, mudanças de status e orçamentos novos ficam em memória e se perdem ao recarregar a página.
 
