@@ -1,0 +1,166 @@
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { createMemoryRouter, RouterProvider, useParams } from 'react-router-dom';
+import { describe, expect, it } from 'vitest';
+import { getQuote } from '@/services/quotesService';
+import { QuoteFormPage } from './QuoteFormPage';
+
+function DetailStub() {
+  const { id } = useParams();
+  return <p>detalhe {id}</p>;
+}
+
+function renderAt(path: string) {
+  const router = createMemoryRouter(
+    [
+      { path: '/orcamentos', element: <p>lista</p> },
+      { path: '/orcamentos/novo', element: <QuoteFormPage mode="new" /> },
+      { path: '/orcamentos/:id/editar', element: <QuoteFormPage mode="edit" /> },
+      { path: '/orcamentos/:id/duplicar', element: <QuoteFormPage mode="duplicate" /> },
+      { path: '/orcamentos/:id', element: <DetailStub /> },
+    ],
+    { initialEntries: [path] },
+  );
+  const user = userEvent.setup();
+  render(<RouterProvider router={router} />);
+  return { user, router };
+}
+
+/** Espera os cadastros e o catálogo carregarem (o campo de cliente só aparece com tudo pronto). */
+async function customerField() {
+  return screen.findByRole('combobox', { name: /cliente/i });
+}
+
+async function choose(user: ReturnType<typeof userEvent.setup>, field: HTMLElement, text: string) {
+  await user.clear(field);
+  await user.type(field, text);
+  await user.keyboard('{Enter}');
+}
+
+describe('novo orçamento', () => {
+  it('preenche, sugere vendedor e desconto, salva e abre o detalhe', async () => {
+    const { user } = renderAt('/orcamentos/novo');
+
+    await choose(user, await customerField(), 'brasa');
+    expect(screen.getByRole('combobox', { name: /vendedor/i })).toHaveValue('Carlos Menezes');
+
+    await choose(user, screen.getByRole('combobox', { name: 'Produto' }), 'boiler');
+    // Preço de tabela 3.790 com os 5% da condição padrão.
+    expect(screen.getByText('R$ 3.600,50')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /salvar orçamento/i }));
+
+    const detail = await screen.findByText(/^detalhe \d+$/);
+    const id = detail.textContent?.replace('detalhe ', '') ?? '';
+    const saved = await getQuote(id);
+    expect(saved.customer).toBe('Restaurante Brasa Viva');
+    expect(saved.seller).toBe('Carlos Menezes');
+    expect(saved.items).toEqual([
+      { code: 'BLR-200', description: 'Boiler de acumulação 200 L', quantity: 1, unitPrice: 3790 },
+    ]);
+    expect(saved.discount).toEqual({ type: 'percent', value: 5 });
+    expect(saved.amount).toBe(3600.5);
+  });
+
+  it('mostra os erros de cada campo ao salvar vazio', async () => {
+    const { user } = renderAt('/orcamentos/novo');
+    await customerField();
+    await user.click(screen.getByRole('button', { name: /salvar orçamento/i }));
+
+    expect(screen.getByText('Escolha o cliente.')).toBeInTheDocument();
+    expect(screen.getByText('Escolha o vendedor.')).toBeInTheDocument();
+    expect(screen.getByText('Escolha o produto.')).toBeInTheDocument();
+    expect(screen.getByText('Valor inválido.')).toBeInTheDocument();
+  });
+
+  it('troca de condição de pagamento tira e devolve o desconto sugerido', async () => {
+    const { user } = renderAt('/orcamentos/novo');
+    await customerField();
+    const discount = screen.getByRole('spinbutton', { name: 'Desconto' });
+    const payment = screen.getByRole('combobox', { name: 'Pagamento' });
+
+    expect(discount).toHaveValue(5);
+    await user.selectOptions(payment, '3x sem juros no cartão');
+    expect(discount).toHaveValue(null);
+    await user.selectOptions(payment, 'À vista com 5% de desconto');
+    expect(discount).toHaveValue(5);
+
+    // Desconto digitado à mão não é tocado pela troca.
+    await user.clear(discount);
+    await user.type(discount, '8');
+    await user.selectOptions(payment, '3x sem juros no cartão');
+    expect(discount).toHaveValue(8);
+  });
+
+  it('cadastra um cliente novo pela busca e já o escolhe', async () => {
+    const { user } = renderAt('/orcamentos/novo');
+    const field = await customerField();
+
+    await user.type(field, 'Padaria Teste');
+    await user.click(screen.getByRole('option', { name: /Cadastrar “Padaria Teste”/ }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Novo cliente' });
+    expect(within(dialog).getByRole('textbox', { name: /nome/i })).toHaveValue('Padaria Teste');
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }));
+
+    await screen.findByText('PT'); // iniciais no cartão do cliente
+    expect(field).toHaveValue('Padaria Teste');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
+describe('aviso de alterações não salvas', () => {
+  it('sai direto quando nada foi alterado', async () => {
+    const { user } = renderAt('/orcamentos/novo');
+    await customerField();
+    await user.click(screen.getByRole('link', { name: 'Cancelar' }));
+    expect(await screen.findByText('lista')).toBeInTheDocument();
+  });
+
+  it('pergunta antes de sair com alterações e respeita a resposta', async () => {
+    const { user } = renderAt('/orcamentos/novo');
+    await customerField();
+    await user.type(screen.getByRole('textbox', { name: 'Observações' }), ' Urgente.');
+
+    await user.click(screen.getByRole('link', { name: 'Cancelar' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Descartar alterações?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Continuar editando' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Novo orçamento' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: 'Cancelar' }));
+    await user.click(await screen.findByRole('button', { name: 'Descartar e sair' }));
+    expect(await screen.findByText('lista')).toBeInTheDocument();
+  });
+});
+
+describe('editar e duplicar', () => {
+  it('abre a edição de um pendente com os dados do orçamento', async () => {
+    renderAt('/orcamentos/1181/editar');
+    expect(await customerField()).toHaveValue('Restaurante Brasa Viva');
+    expect(screen.getByRole('heading', { name: 'Editar orçamento #1181' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /salvar alterações/i })).toBeInTheDocument();
+  });
+
+  it('não deixa editar um orçamento aprovado e oferece a cópia', async () => {
+    renderAt('/orcamentos/1179/editar');
+    expect(await screen.findByRole('heading', { name: 'Este orçamento não pode ser editado' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /duplicar/i })).toHaveAttribute('href', '/orcamentos/1179/duplicar');
+  });
+
+  it('duplicar cria um orçamento novo e mantém o original', async () => {
+    const original = await getQuote('1179');
+    const { user } = renderAt('/orcamentos/1179/duplicar');
+    await customerField();
+    await user.click(screen.getByRole('button', { name: /criar cópia/i }));
+
+    const detail = await screen.findByText(/^detalhe \d+$/);
+    const id = detail.textContent?.replace('detalhe ', '') ?? '';
+    expect(id).not.toBe('1179');
+    const copy = await getQuote(id);
+    expect(copy.status).toBe('Pendente');
+    expect(copy.amount).toBe(original.amount);
+    expect(copy.history[0]?.note).toBe('Criado a partir do orçamento #1179');
+    expect((await getQuote('1179')).status).toBe(original.status);
+  });
+});

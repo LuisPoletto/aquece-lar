@@ -21,10 +21,14 @@ Abre em `http://localhost:5173`.
 Outros scripts:
 
 ```bash
+npm test             # Vitest + Testing Library (jsdom), uma rodada
+npm run test:watch   # testes em modo observação
 npm run typecheck
 npm run build
 npm run preview
 ```
+
+Os testes ficam ao lado do código (`*.test.ts(x)`) e cobrem o cálculo de totais e desconto, o serviço de orçamentos (incluindo a coerência dos mocks), o campo de busca e os fluxos do formulário de orçamento.
 
 ## Estrutura
 

@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -11,5 +12,11 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+  },
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    // Os serviços simulam 250 ms de latência por chamada.
+    testTimeout: 15_000,
   },
 });
